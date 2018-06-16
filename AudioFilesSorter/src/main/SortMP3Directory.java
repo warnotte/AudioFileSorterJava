@@ -147,6 +147,11 @@ public class SortMP3Directory {
 					// On connais pas l'artist... ni l'année... donc on mets le nom du repertoire original.
 					ARTIST = "UNKONWN_ARTIST";
 					ALBUM = f.getName();
+					
+
+					// TODO : Ici y'a le cas de [[WAP376] Clark vs. Com Truise - Bobbie Caris-Idle withdrawal 12'' (2017)]
+					,kpokpo
+					// TODO : Fin non c'est pas ici c"'est avant ou j'sais pas ou, faut un truc plus performant pour avoir le nom des artistes
 				}
 				
 				ARTIST = filterInvalidCaracters(ARTIST);
