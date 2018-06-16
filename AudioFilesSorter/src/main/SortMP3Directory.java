@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.util.logging.LogManager;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -27,7 +28,7 @@ public class SortMP3Directory {
 	 */
 	static String inputDirectory = "E:\\mp3tosort";
 	static String outputDirectory = "E:\\mp3tosorted";
-	static boolean debugMode = false;
+	static boolean debugMode = true;
 	
 	
 	
@@ -42,11 +43,14 @@ public class SortMP3Directory {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
+		
+		LogManager.getLogManager().reset();
+		
 		if (debugMode==false)
 			new File(outputDirectory).mkdir();
 		// Mettre le dernier paramètre a true pour ne pas effectuer les opeération et debug.
 		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier paramètre) // 22/02/2017
-		System.out.println(":) - Directory processed : " + DirectoryProcessed);
+		System.out.println(":) - Directory processed : " + (DirectoryProcessed-1));
 		if (file_copy_failed>0)
 			System.out.printf(":((- File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success);
 		else
@@ -77,6 +81,9 @@ public class SortMP3Directory {
 	 */
 	private static void doRecursive(File f, boolean deleteOriginalFile, int level, boolean debugMode) {
 
+		
+		DirectoryProcessed++;
+		
 //		System.err.println("---------------------------");
 		String Path = f.getPath();
 		
@@ -93,12 +100,13 @@ public class SortMP3Directory {
 				doRecursive(fils, deleteOriginalFile, level + 1, debugMode);
 		}
 		
+		// TODO : le boolean est un inutile puisque l'autre restera null, mais on garde pour savoir si on fait une moyenne ou un cumul au cas ou certains mp3 d'un repertoire aurait l'info manquante. 
 		boolean ID3TagPresent = false;
 		Tag tag = null;
 
 		String listFiles[] = f.list(new FilenameFilter_FILES());
 		// Process files in this folder if exists
-		if (listFiles != null) {
+		if ((listFiles != null) && (listFiles.length!=0)){
 			for (int i = 0; i < listFiles.length; i++) {
 				File fils = new File(Path + "\\" + listFiles[i]);
 				if (ID3TagPresent == false) {
@@ -109,7 +117,8 @@ public class SortMP3Directory {
 						if (tag != null)
 						{
 							ID3TagPresent = true;
-							System.out.println(":) - IDTag Present "+tag.getFieldCount()+ " - "+fils.getAbsolutePath());
+							break;
+							//System.out.println(":) - IDTag Present "+tag.getFieldCount()+ " - "+fils.getAbsolutePath());
 						}
 					} catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
 						// System.err.println("Cannot threat : " + fils);
@@ -119,9 +128,12 @@ public class SortMP3Directory {
 			}
 		}
 
+		System.out.println(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
+		
 		if (level>0) {
 			if ((ID3TagPresent == true) ) {
-				System.out.println(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
+				
+				System.out.println(":) - IDTag Present "+tag.getFieldCount());
 				String YEAR = tag.getFirst(FieldKey.YEAR);
 				if ((YEAR == null) || (YEAR.length() == 0)) {
 					YEAR = "UNKNOWN_YEAR";
@@ -141,7 +153,7 @@ public class SortMP3Directory {
 				ALBUM = filterInvalidCaracters(ALBUM);
 				
 				System.out.printf(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR);
-				DirectoryProcessed++;
+				
 		
 				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caractères foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout ça
 				File destinationDirectory = new File(outputDirectory + "\\" + ARTIST);
@@ -175,8 +187,15 @@ public class SortMP3Directory {
 				}
 			}
 			else
-				System.out.println(":( - No Tag present for "+Path);
+			{
+				// Si y'a aucun fichier dans ce reperoite c'est vide donc osef.
+				if ((listFiles != null) && (listFiles.length!=0))
+					System.out.println(":( - No Tag present for "+Path);
+				else
+					System.out.println(":) - Empty directory "+Path);
+			}
 		}
+		System.out.println();
 	}
 
 	private static String filterInvalidCaracters(String str) {
