@@ -136,6 +136,10 @@ public class SortMP3Directory {
 					ARTIST = "UNKONWN_ARTIST";
 					ALBUM = f.getName();
 				}
+				
+				ARTIST = filterInvalidCaracters(ARTIST);
+				ALBUM = filterInvalidCaracters(ALBUM);
+				
 				System.out.printf(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR);
 				DirectoryProcessed++;
 		
@@ -175,6 +179,20 @@ public class SortMP3Directory {
 		}
 	}
 
+	private static String filterInvalidCaracters(String str) {
+		
+		String regexp = "\\/?%*:|\"<>";
+		 regexp = "[?]";
+		String filteredstr = str.replaceAll(regexp, "_");
+		
+		
+		if (str.equals(filteredstr)==false)	{
+			System.out.println("This string ["+str+"] has been filtered to ["+filteredstr+"]");
+		}	
+				
+		return filteredstr;
+	}
+
 	private static void CopieRepertoire(File actualDirectory, File destinationDirectory) throws Exception  {
 		String[] filestoCopy = actualDirectory.list(new FilenameFilter_FILES_ALL());
 		for (int i = 0; i < filestoCopy.length; i++) {
@@ -184,16 +202,19 @@ public class SortMP3Directory {
 			
 			try {
 				Files.copy(fin.toPath(), fout.toPath(), REPLACE_EXISTING);
+				file_copy_success++;
 				boolean ret = fin.delete();
 				//	boolean ret = fin.renameTo(fout);
 				if (ret == false)
+				
 					throw new Exception("Failed to delete : "+fin.getAbsolutePath());
 				
-			} catch (InvalidPathException e) {
 				
+			} catch (InvalidPathException e) {
+				file_copy_failed++;
 				e.printStackTrace();
 			} catch (IOException e) {
-
+				file_copy_failed++;
 				e.printStackTrace();
 			}
 			
