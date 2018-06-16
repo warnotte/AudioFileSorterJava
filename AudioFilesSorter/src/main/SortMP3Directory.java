@@ -5,6 +5,7 @@ package main;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -24,8 +25,8 @@ public class SortMP3Directory {
 	 * En théorie tu touche a rien d'autres qu'a ça... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
-	static String inputDirectory = "E:\\MMM\\";
-	static String outputDirectory = "E:\\MMM\\SORTED\\";
+	static String inputDirectory = "E:\\mp3tosort";
+	static String outputDirectory = "E:\\mp3tosorted";
 	static boolean debugMode = false;
 	
 	
@@ -138,6 +139,7 @@ public class SortMP3Directory {
 				System.out.printf(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR);
 				DirectoryProcessed++;
 		
+				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caractères foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout ça
 				File destinationDirectory = new File(outputDirectory + "\\" + ARTIST);
 				File destinationDirectoryM =  new File(outputDirectory + "\\" + ARTIST + "\\[" + YEAR + "] " + ALBUM);
 				
@@ -153,37 +155,48 @@ public class SortMP3Directory {
 					destinationDirectoryM.mkdir();
 					try {
 						CopieRepertoire(f, destinationDirectoryM);
+						
+						// System.err.println("Will delete :" + f);
+						boolean ret = f.delete();
+						
+						if (ret==false)
+							System.out.println(":( - Error DELETING "+f.getAbsolutePath());
+						
 					} catch (Exception e) {
 						e.printStackTrace();
 						file_copy_failed++;
-						System.err.printf(":( - Error COPYING [%s] to [%s] ",f.getAbsolutePath(), destinationDirectoryM.getAbsolutePath());
+						System.out.printf(":( - Error COPYING [%s] to [%s] ",f.getAbsolutePath(), destinationDirectoryM.getAbsolutePath());
 					}
-					// System.err.println("Will delete :" + f);
-					boolean ret = f.delete();
-					
-					if (ret==false)
-						System.err.println(":( - Error DELETING "+f.getAbsolutePath());
+
 				}
 			}
 			else
-				System.err.println(":( - No Tag present for "+Path);
+				System.out.println(":( - No Tag present for "+Path);
 		}
 	}
 
-	private static void CopieRepertoire(File actualDirectory, File destinationDirectory) throws Exception {
+	private static void CopieRepertoire(File actualDirectory, File destinationDirectory) throws Exception  {
 		String[] filestoCopy = actualDirectory.list(new FilenameFilter_FILES_ALL());
 		for (int i = 0; i < filestoCopy.length; i++) {
 			File fin = new File(actualDirectory + "\\" + filestoCopy[i]);
 			File fout = new File(destinationDirectory + "\\" + filestoCopy[i]);
 			//System.err.println(fin+"->"+fout);
 			
-			Files.copy(fin.toPath(), fout.toPath(), REPLACE_EXISTING);
-			boolean ret = fin.delete();
-		//	boolean ret = fin.renameTo(fout);
-			if (ret == false)
-			{
-				throw new Exception("Failed to delete : "+fin.getAbsolutePath());
+			try {
+				Files.copy(fin.toPath(), fout.toPath(), REPLACE_EXISTING);
+				boolean ret = fin.delete();
+				//	boolean ret = fin.renameTo(fout);
+				if (ret == false)
+					throw new Exception("Failed to delete : "+fin.getAbsolutePath());
+				
+			} catch (InvalidPathException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+
+				e.printStackTrace();
 			}
+			
 	
 		}
 	}
