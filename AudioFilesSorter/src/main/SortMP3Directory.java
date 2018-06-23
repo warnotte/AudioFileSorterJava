@@ -2,10 +2,13 @@
 
 package main;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.util.List;
 import java.util.logging.LogManager;
 
 import org.jaudiotagger.audio.AudioFile;
@@ -17,8 +20,6 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 
-import static java.nio.file.StandardCopyOption.*;
-
 public class SortMP3Directory {
 	
 	/**
@@ -28,7 +29,7 @@ public class SortMP3Directory {
 	 */
 	static String inputDirectory = "E:\\mp3tosort";
 	static String outputDirectory = "E:\\mp3tosorted";
-	static boolean debugMode = true;
+	static boolean debugMode = false;
 	
 	
 	
@@ -147,16 +148,8 @@ public class SortMP3Directory {
 					// On connais pas l'artist... ni l'année... donc on mets le nom du repertoire original.
 					ARTIST = "UNKONWN_ARTIST";
 					ALBUM = f.getName();
-					
-
-					// 
-
-					// TODO : Ici y'a le cas de [[WAP376] Clark vs. Com Truise - Bobbie Caris-Idle withdrawal 12'' (2017)]
-					,kpokpo
-					// TODO : Fin non c'est pas ici c"'est avant ou j'sais pas ou, faut un truc plus performant pour avoir le nom des artistes
-					// TODO : Mais ... ca va faire chier pour le tri dans les repertoires :)
 				}
-				
+								
 				ARTIST = filterInvalidCaracters(ARTIST);
 				ALBUM = filterInvalidCaracters(ALBUM);
 				
