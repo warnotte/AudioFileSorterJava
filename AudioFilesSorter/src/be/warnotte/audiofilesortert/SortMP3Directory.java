@@ -1,6 +1,6 @@
 
 
-package main;
+package be.warnotte.audiofilesortert;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -27,8 +27,8 @@ public class SortMP3Directory {
 	 * En théorie tu touche a rien d'autres qu'a ça... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
-	static String inputDirectory = "E:\\mp3tosort";
-	static String outputDirectory = "E:\\mp3tosorted";
+	static String inputDirectory = "E:\\mow";
+	static String outputDirectory = "E:\\mowed";
 	static boolean debugMode = false;
 	
 	

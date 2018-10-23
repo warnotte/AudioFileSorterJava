@@ -1,7 +1,7 @@
 /**
  * 
  */
-package main;
+package be.warnotte.audiofilesortert;
 
 import java.io.File;
 import java.io.FilenameFilter;
