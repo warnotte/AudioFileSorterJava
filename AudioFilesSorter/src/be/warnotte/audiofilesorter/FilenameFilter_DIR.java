@@ -1,7 +1,7 @@
 /**
  * 
  */
-package be.warnotte.audiofilesortert;
+package be.warnotte.audiofilesorter;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -10,14 +10,14 @@ import java.io.FilenameFilter;
  * @author user
  *
  */
-public class FilenameFilter_FILES_ALL implements FilenameFilter
+public class FilenameFilter_DIR implements FilenameFilter
 {
+
 	public boolean accept(File dir, String name)
 	{
 		File file = new File(dir.getAbsolutePath()+"\\"+name);
-		
 		if (file.isDirectory()==true)
-			return false;
-		return true;
+			return true;
+		return false;
 	}
 }

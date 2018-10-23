@@ -1,6 +1,6 @@
 
 
-package be.warnotte.audiofilesortert;
+package be.warnotte.audiofilesorter;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
