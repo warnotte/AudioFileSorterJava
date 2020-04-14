@@ -113,11 +113,13 @@ public class SortMP3Directory {
 				if (ID3TagPresent == false) {
 					AudioFile fh;
 					try {
+						
 						fh = AudioFileIO.read(fils);
 						tag = fh.getTag();
 						if (tag != null)
 						{
 							ID3TagPresent = true;
+							
 							break;
 							//System.out.println(":) - IDTag Present "+tag.getFieldCount()+ " - "+fils.getAbsolutePath());
 						}
@@ -174,10 +176,10 @@ public class SortMP3Directory {
 						CopieRepertoire(f, destinationDirectoryM);
 						
 						// System.err.println("Will delete :" + f);
-						boolean ret = f.delete();
+					//	boolean ret = f.delete();
 						
-						if (ret==false)
-							System.out.println(":( - Error DELETING "+f.getAbsolutePath());
+					//	if (ret==false)
+					//		System.out.println(":( - Error DELETING "+f.getAbsolutePath());
 						
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -225,13 +227,13 @@ public class SortMP3Directory {
 			
 			try {
 				Files.copy(fin.toPath(), fout.toPath(), REPLACE_EXISTING);
+				
 				file_copy_success++;
-				boolean ret = fin.delete();
+				//boolean ret = fin.delete();
 				//	boolean ret = fin.renameTo(fout);
-				if (ret == false)
-				
-					throw new Exception("Failed to delete : "+fin.getAbsolutePath());
-				
+				//if (ret == false)
+				//	throw new Exception("Failed to delete : "+fin.getAbsolutePath());
+				//
 				
 			} catch (InvalidPathException e) {
 				file_copy_failed++;
