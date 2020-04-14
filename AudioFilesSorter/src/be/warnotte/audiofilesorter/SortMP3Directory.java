@@ -27,8 +27,8 @@ public class SortMP3Directory {
 	 * En théorie tu touche a rien d'autres qu'a ça... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
-	static String inputDirectory = "E:\\mow";
-	static String outputDirectory = "E:\\mowed";
+	static String inputDirectory = "E:\\AUDIO\\SRC";
+	static String outputDirectory = "E:\\AUDIO\\SRT";
 	static boolean debugMode = false;
 	
 	
@@ -202,8 +202,11 @@ public class SortMP3Directory {
 	private static String filterInvalidCaracters(String str) {
 		
 		String regexp = "\\/?%*:|\"<>";
-		 regexp = "[?]";
+//		 regexp = "[?]";
 		String filteredstr = str.replaceAll(regexp, "_");
+		
+		filteredstr = filteredstr.replaceAll("/", "-");
+		filteredstr = filteredstr.replaceAll("\\|", "-");
 		
 		
 		if (str.equals(filteredstr)==false)	{
