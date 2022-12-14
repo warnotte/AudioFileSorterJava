@@ -24,11 +24,11 @@ public class SortMP3Directory {
 	
 	/**
 	 * 
-	 * En théorie tu touche a rien d'autres qu'a ça... et tu backup et tu testes avant de lancer tout sinon...
+	 * En thï¿½orie tu touche a rien d'autres qu'a ï¿½a... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
-	static String inputDirectory = "E:\\AUDIO\\SRC";
-	static String outputDirectory = "E:\\AUDIO\\SRT";
+	static String inputDirectory = "c:\\tosort";
+	static String outputDirectory = "c:\\sorted";
 	static boolean debugMode = false;
 	
 	
@@ -49,8 +49,8 @@ public class SortMP3Directory {
 		
 		if (debugMode==false)
 			new File(outputDirectory).mkdir();
-		// Mettre le dernier paramètre a true pour ne pas effectuer les opeération et debug.
-		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier paramètre) // 22/02/2017
+		// Mettre le dernier paramï¿½tre a true pour ne pas effectuer les opeï¿½ration et debug.
+		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier paramï¿½tre) // 22/02/2017
 		System.out.println(":) - Directory processed : " + (DirectoryProcessed-1));
 		if (file_copy_failed>0)
 			System.out.printf(":((- File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success);
@@ -64,7 +64,7 @@ public class SortMP3Directory {
 	 * 
 	 * @param f
 	 * @param deleteOriginalFile
-	 * @param debugMode N'execute aucune modification mais renvoye tout les messages de debbogages de ce qu'il est censé se passer.
+	 * @param debugMode N'execute aucune modification mais renvoye tout les messages de debbogages de ce qu'il est censï¿½ se passer.
 	 */
 	private static void doRecursive(File f, boolean deleteOriginalFile, boolean debugMode) {
 		DirectoryProcessed = 0;
@@ -77,7 +77,7 @@ public class SortMP3Directory {
 	 * 
 	 * @param f Le repertoire de base ou se trouvent les PDF
 	 * @param processor Le processeur qui doit effectuer un travail sur chacun des fichiers.
-	 * @param replaceOriginalFile Efface le fichier original pour le remplacer par le fichier processé
+	 * @param replaceOriginalFile Efface le fichier original pour le remplacer par le fichier processï¿½
 	 * @throws Exception
 	 */
 	private static void doRecursive(File f, boolean deleteOriginalFile, int level, boolean debugMode) {
@@ -88,7 +88,7 @@ public class SortMP3Directory {
 //		System.err.println("---------------------------");
 		String Path = f.getPath();
 		
-		// Ne retrie pas le repertoire de sortie prédefini par avant... (inutile dans cette méthode doit etre deporte ? ou ne pas sortir dans le repertoire de traitement et faire une vrai copie)
+		// Ne retrie pas le repertoire de sortie prï¿½defini par avant... (inutile dans cette mï¿½thode doit etre deporte ? ou ne pas sortir dans le repertoire de traitement et faire une vrai copie)
 		if (Path.contains(outputDirectory))
 			return;
 
@@ -147,7 +147,7 @@ public class SortMP3Directory {
 				}
 				String ARTIST = tag.getFirst(FieldKey.ARTIST);
 				if ((ARTIST == null) || (ARTIST.length() == 0)) {
-					// On connais pas l'artist... ni l'année... donc on mets le nom du repertoire original.
+					// On connais pas l'artist... ni l'annï¿½e... donc on mets le nom du repertoire original.
 					ARTIST = "UNKONWN_ARTIST";
 					ALBUM = f.getName();
 				}
@@ -158,7 +158,7 @@ public class SortMP3Directory {
 				System.out.printf(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR);
 				
 		
-				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caractères foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout ça
+				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caractï¿½res foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout ï¿½a
 				File destinationDirectory = new File(outputDirectory + "\\" + ARTIST);
 				File destinationDirectoryM =  new File(outputDirectory + "\\" + ARTIST + "\\[" + YEAR + "] " + ALBUM);
 				
@@ -195,6 +195,7 @@ public class SortMP3Directory {
 				if ((listFiles != null) && (listFiles.length!=0))
 					System.out.println(":( - No Tag present for "+Path);
 				else
+					// TODO : ce test doit etre mis avant le reste du code...
 					System.out.println(":) - Empty directory "+Path);
 			}
 		}
