@@ -52,8 +52,15 @@ public class SortMP3Directory {
 		// Mettre le dernier param�tre a true pour ne pas effectuer les ope�ration et debug.
 		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier param�tre) // 22/02/2017
 		System.out.println(":) - Directory processed : " + (DirectoryProcessed-1));
-		if (file_copy_failed>0)
+		
+		if (file_copy_failed>0) {
+			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
 			System.out.printf(":((- File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success);
+			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+		}
+			
 		else
 			System.out.printf(":) - File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success);
 		
