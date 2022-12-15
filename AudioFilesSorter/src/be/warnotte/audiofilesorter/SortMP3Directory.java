@@ -147,13 +147,15 @@ public class SortMP3Directory {
 				}
 				String ARTIST = tag.getFirst(FieldKey.ARTIST);
 				if ((ARTIST == null) || (ARTIST.length() == 0)) {
-					// On connais pas l'artist... ni l'ann�e... donc on mets le nom du repertoire original.
+					// On connais pas l'artist... ni l'année... donc on mets le nom du repertoire original.
 					ARTIST = "UNKONWN_ARTIST";
 					ALBUM = f.getName();
 				}
 								
 				ARTIST = filterInvalidCaracters(ARTIST);
 				ALBUM = filterInvalidCaracters(ALBUM);
+				// TODO : a tester deja vu un truc genre 2008/2015
+				//YEAR = filterInvalidCaracters(YEAR);
 				
 				System.out.printf(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR);
 				
