@@ -29,7 +29,7 @@ public class SortMP3Directory {
 	 */
 	static String inputDirectory = "c:\\tosort";
 	static String outputDirectory = "c:\\sorted";
-	static boolean debugMode = false;
+	static boolean debugMode = true;
 	
 	
 	
