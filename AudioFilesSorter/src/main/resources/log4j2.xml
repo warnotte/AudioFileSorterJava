@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Normalement on n'est pas obligé de mettre log4j2.xml dans le projet qui utilise WaxLib car il e sera mis a partir de waxLib dans le jar avec maven -->
+<Configuration status="warn">
+    <Properties>
+        <Property name="basePath">logs</Property>
+        <Property name="filePattern">${date:yyyy-MMdd@hh-mm-ss}</Property>
+    </Properties>
+ 
+ 
+ 
+     <Appenders>
+     
+ 
+        <File name="fileLogger" fileName="${basePath}/waxliblog-${filePattern}.html">
+        <HTMLLayout charset="UTF-8" title="waxliblog Info Logs" locationInfo="true" />
+           <!-- <PatternLayout>
+                <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+            </PatternLayout>
+              -->
+        </File>
+  
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout   pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
+        </Console>
+        
+        
+            
+    </Appenders>
+    
+
+ 
+    <Loggers>
+        <Logger name="waxliblog" level="debug" additivity="true">
+            
+        </Logger>
+        <Root level="debug" additivity="false">
+            <appender-ref ref="console" />
+            <appender-ref ref="fileLogger" level="warn" />
+            
+        </Root>
+    </Loggers>
+</Configuration>
