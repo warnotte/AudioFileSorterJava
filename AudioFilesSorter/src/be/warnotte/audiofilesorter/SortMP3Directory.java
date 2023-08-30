@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.LogManager;
 
@@ -27,8 +29,8 @@ public class SortMP3Directory {
 	 * En th�orie tu touche a rien d'autres qu'a �a... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
-	static String inputDirectory = "c:\\tosort";
-	static String outputDirectory = "c:\\sorted";
+	static String inputDirectory = "d:\\mp3";
+	static String outputDirectory = "e:\\sorted";
 	static boolean debugMode = true;
 	
 	
@@ -38,6 +40,10 @@ public class SortMP3Directory {
 	private static int DirectoryProcessed = 0;
 	private static int file_copy_failed = 0;
 	private static int file_copy_success = 0;
+	
+	static List<File> listCOPYERROR = new ArrayList<>();
+	static List<String> listNOTAG = new ArrayList<>();
+	
 
 	/**
 	 * @param args
@@ -51,6 +57,27 @@ public class SortMP3Directory {
 			new File(outputDirectory).mkdir();
 		// Mettre le dernier param�tre a true pour ne pas effectuer les ope�ration et debug.
 		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier param�tre) // 22/02/2017
+		
+		
+		
+		System.out.println("-------------------------------------------------");
+		System.out.println("-------------------------------------------------");
+		System.out.println("REPORT ------------------------------------------");
+		System.out.println("-------------------------------------------------");
+		System.out.println("-------------------------------------------------");
+		
+		// List all Error or NO Tag
+		System.out.println("No TAGGED directory : "+listNOTAG.size());
+		System.out.println("COPY ERROR directory : "+listCOPYERROR.size());
+		System.out.println("-------------------------------------------------");
+		for (int i = 0; i < listNOTAG.size(); i++) {
+			System.out.println("NO TAG OF : "+listNOTAG.get(i));
+		}System.out.println("-------------------------------------------------");
+		for (int i = 0; i < listCOPYERROR.size(); i++) {
+			System.out.println("COPY ERROR OF : "+listCOPYERROR.get(i));
+		}
+		System.out.println("-------------------------------------------------");
+		
 		System.out.println(":) - Directory processed : " + (DirectoryProcessed-1));
 		
 		if (file_copy_failed>0) {
@@ -194,6 +221,8 @@ public class SortMP3Directory {
 						e.printStackTrace();
 						file_copy_failed++;
 						System.out.printf(":( - Error COPYING [%s] to [%s] ",f.getAbsolutePath(), destinationDirectoryM.getAbsolutePath());
+						
+						listCOPYERROR.add(f);
 					}
 
 				}
@@ -202,7 +231,11 @@ public class SortMP3Directory {
 			{
 				// Si y'a aucun fichier dans ce reperoite c'est vide donc osef.
 				if ((listFiles != null) && (listFiles.length!=0))
+				{
 					System.out.println(":( - No Tag present for "+Path);
+					
+					listNOTAG.add(Path);
+				}
 				else
 					// TODO : ce test doit etre mis avant le reste du code...
 					System.out.println(":) - Empty directory "+Path);
