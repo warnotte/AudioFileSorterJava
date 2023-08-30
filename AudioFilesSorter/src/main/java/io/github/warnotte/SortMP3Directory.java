@@ -4,6 +4,7 @@ package io.github.warnotte;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,39 +65,42 @@ public class SortMP3Directory {
 		// Mettre le dernier param�tre a true pour ne pas effectuer les ope�ration et debug.
 		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier param�tre) // 22/02/2017
 		
-		Logger.error("ERROR");
 		
-		System.out.println("-------------------------------------------------");
-		System.out.println("-------------------------------------------------");
-		System.out.println("REPORT ------------------------------------------");
-		System.out.println("-------------------------------------------------");
-		System.out.println("-------------------------------------------------");
+		
+		Logger.info("-------------------------------------------------");
+		Logger.info("-------------------------------------------------");
+		Logger.info("REPORT ------------------------------------------");
+		Logger.info("-------------------------------------------------");
+		Logger.info("-------------------------------------------------");
 		
 		// List all Error or NO Tag
-		System.out.println("No TAGGED directory : "+listNOTAG.size());
-		System.out.println("COPY ERROR directory : "+listCOPYERROR.size());
-		System.out.println("-------------------------------------------------");
+		Logger.info("No TAGGED directory : "+listNOTAG.size());
+		Logger.info("COPY ERROR directory : "+listCOPYERROR.size());
+		Logger.info("-------------------------------------------------");
 		for (int i = 0; i < listNOTAG.size(); i++) {
-			System.out.println("NO TAG OF : "+listNOTAG.get(i));
-		}System.out.println("-------------------------------------------------");
+			Logger.warn("NO TAG OF : "+listNOTAG.get(i));
+		}Logger.info("-------------------------------------------------");
 		for (int i = 0; i < listCOPYERROR.size(); i++) {
-			System.out.println("COPY ERROR OF : "+listCOPYERROR.get(i));
+			Logger.warn("COPY ERROR OF : "+listCOPYERROR.get(i));
 		}
-		System.out.println("-------------------------------------------------");
+		Logger.info("-------------------------------------------------");
 		
-		System.out.println(":) - Directory processed : " + (DirectoryProcessed-1));
+		Logger.info(":) - Directory processed : " + (DirectoryProcessed-1));
 		
 		if (file_copy_failed>0) {
-			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-			System.out.printf(":((- File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success);
-			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-			System.out.println("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+			Logger.fatal(String.format(":((- File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success));
+			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
+			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
 		}
 			
 		else
-			System.out.printf(":) - File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success);
+			Logger.info(String.format(":) - File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success));
 		
+		
+		Desktop.getDesktop().open(new File("logs/AudioSort-errors.html"));
+		Desktop.getDesktop().open(new File("logs/AudioSort.html"));
 		
 	}
 
@@ -161,7 +165,7 @@ public class SortMP3Directory {
 							ID3TagPresent = true;
 							
 							break;
-							//System.out.println(":) - IDTag Present "+tag.getFieldCount()+ " - "+fils.getAbsolutePath());
+							//Logger.info(":) - IDTag Present "+tag.getFieldCount()+ " - "+fils.getAbsolutePath());
 						}
 					} catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
 						// System.err.println("Cannot threat : " + fils);
@@ -171,12 +175,12 @@ public class SortMP3Directory {
 			}
 		}
 
-		System.out.println(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
+		Logger.info(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
 		
 		if (level>0) {
 			if ((ID3TagPresent == true) ) {
 				
-				System.out.println(":) - IDTag Present "+tag.getFieldCount());
+				Logger.info(":) - IDTag Present "+tag.getFieldCount());
 				String YEAR = tag.getFirst(FieldKey.YEAR);
 				if ((YEAR == null) || (YEAR.length() == 0)) {
 					YEAR = "UNKNOWN_YEAR";
@@ -192,12 +196,12 @@ public class SortMP3Directory {
 					ALBUM = f.getName();
 				}
 								
-				ARTIST = filterInvalidCaracters(ARTIST);
-				ALBUM = filterInvalidCaracters(ALBUM);
+				ARTIST = filterInvalidCaracters(ARTIST, Path);
+				ALBUM = filterInvalidCaracters(ALBUM, Path);
 				// TODO : a tester deja vu un truc genre 2008/2015
 				//YEAR = filterInvalidCaracters(YEAR);
 				
-				System.out.printf(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR);
+				Logger.info(String.format(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR));
 				
 		
 				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caract�res foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout �a
@@ -221,13 +225,12 @@ public class SortMP3Directory {
 					//	boolean ret = f.delete();
 						
 					//	if (ret==false)
-					//		System.out.println(":( - Error DELETING "+f.getAbsolutePath());
+					//		Logger.info(":( - Error DELETING "+f.getAbsolutePath());
 						
 					} catch (Exception e) {
 						e.printStackTrace();
 						file_copy_failed++;
-						System.out.printf(":( - Error COPYING [%s] to [%s] ",f.getAbsolutePath(), destinationDirectoryM.getAbsolutePath());
-						
+						Logger.error(String.format(":( - Error COPYING [%s] to [%s] ",f.getAbsolutePath(), destinationDirectoryM.getAbsolutePath()));
 						listCOPYERROR.add(f);
 					}
 
@@ -238,19 +241,19 @@ public class SortMP3Directory {
 				// Si y'a aucun fichier dans ce reperoite c'est vide donc osef.
 				if ((listFiles != null) && (listFiles.length!=0))
 				{
-					System.out.println(":( - No Tag present for "+Path);
+					Logger.warn(":( - No Tag present for "+Path);
 					
 					listNOTAG.add(Path);
 				}
 				else
 					// TODO : ce test doit etre mis avant le reste du code...
-					System.out.println(":) - Empty directory "+Path);
+					Logger.info(":) - Empty directory "+Path);
 			}
 		}
-		System.out.println();
+		
 	}
 
-	private static String filterInvalidCaracters(String str) {
+	private static String filterInvalidCaracters(String str, String dir) {
 		
 		String regexp = "\\/?%*:|\"<>";
 //		 regexp = "[?]";
@@ -261,7 +264,7 @@ public class SortMP3Directory {
 		
 		
 		if (str.equals(filteredstr)==false)	{
-			System.out.println("This string ["+str+"] has been filtered to ["+filteredstr+"]");
+			Logger.warn("This string ["+str+"] has been filtered to ["+filteredstr+"] on path ["+dir+"]");
 		}	
 				
 		return filteredstr;
