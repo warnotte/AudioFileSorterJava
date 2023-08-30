@@ -27,7 +27,7 @@
 
         <!-- Fichier log avec uniquement les erreurs -->
         <!-- <File name="ErrorFileAppender" fileName="${basePath}/waxliblog-errors${filePattern}.html">-->
-        <File name="ErrorFileAppender" fileName="${basePath}/AudioSort-errors.html">
+        <File  name="ErrorFileAppender" fileName="${basePath}/AudioSort-errors.html">
         	<HTMLLayout charset="UTF-8" title="waxliblog Warning Logs" locationInfo="true" />
             <PatternLayout   pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n" />
             <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>

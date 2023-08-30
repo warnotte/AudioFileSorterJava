@@ -9,14 +9,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
@@ -30,16 +32,18 @@ import org.jaudiotagger.tag.TagException;
 
 public class SortMP3Directory {
 	
-	protected static final Logger Logger = LogManager.getLogger("SortMP3Directory");
+	protected static Logger Logger; 
 	
 	/**
 	 * 
-	 * En th�orie tu touche a rien d'autres qu'a �a... et tu backup et tu testes avant de lancer tout sinon...
+	 * En théorie tu touche a rien d'autres qu'a ça... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
-	static String inputDirectory = "D:\\mp3\\Electro\\Aphex Twin";
+	
+	//static String inputDirectory = "D:\\mp3\\Electro\\Aphex Twin";
+	static String inputDirectory = "D:\\mp3\\Techno";
 	static String outputDirectory = "e:\\sorted";
-	static boolean debugMode = true;
+	static boolean debugMode = false;
 	
 	
 	
@@ -59,10 +63,11 @@ public class SortMP3Directory {
 	 */
 	public static void main(String[] args) throws Exception {
 		
-		
+		deleteDir(new File("logs"));
+		Logger = LogManager.getLogger("SortMP3Directory");;
 		if (debugMode==false)
 			new File(outputDirectory).mkdir();
-		// Mettre le dernier param�tre a true pour ne pas effectuer les ope�ration et debug.
+		// Mettre le dernier param�tre a true pour ne pas effectuer les opeération et debug.
 		doRecursive(new File(inputDirectory), false, debugMode); // Ne deplace rien, affiche juste la console (dernier param�tre) // 22/02/2017
 		
 		
@@ -77,11 +82,13 @@ public class SortMP3Directory {
 		Logger.info("No TAGGED directory : "+listNOTAG.size());
 		Logger.info("COPY ERROR directory : "+listCOPYERROR.size());
 		Logger.info("-------------------------------------------------");
+		if (listNOTAG.size()!=0)
 		for (int i = 0; i < listNOTAG.size(); i++) {
 			Logger.warn("NO TAG OF : "+listNOTAG.get(i));
 		}Logger.info("-------------------------------------------------");
+		if (listCOPYERROR.size()!=0)
 		for (int i = 0; i < listCOPYERROR.size(); i++) {
-			Logger.warn("COPY ERROR OF : "+listCOPYERROR.get(i));
+			Logger.fatal("COPY ERROR OF : "+listCOPYERROR.get(i));
 		}
 		Logger.info("-------------------------------------------------");
 		
@@ -102,6 +109,17 @@ public class SortMP3Directory {
 		Desktop.getDesktop().open(new File("logs/AudioSort-errors.html"));
 		Desktop.getDesktop().open(new File("logs/AudioSort.html"));
 		
+	}
+
+	private static void deleteDir(File string) throws IOException {
+		File[] allContents = string.listFiles();
+	    if (allContents != null) {
+	        for (File file : allContents) {
+	        	deleteDir(file);
+	        }
+	    }
+	    string.delete();
+	    
 	}
 
 	/**
@@ -148,63 +166,139 @@ public class SortMP3Directory {
 		// TODO : le boolean est un inutile puisque l'autre restera null, mais on garde pour savoir si on fait une moyenne ou un cumul au cas ou certains mp3 d'un repertoire aurait l'info manquante. 
 		boolean ID3TagPresent = false;
 		Tag tag = null;
-
+		AudioHeader audioheader = null;
 		String listFiles[] = f.list(new FilenameFilter_FILES());
+		
+		Logger.info(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
+		if ((listFiles == null) || (listFiles.length==0))
+		{
+			// TODO : ce test doit etre mis avant le reste du code...
+			Logger.info(":) - Empty directory "+Path);
+			return;
+		}
+		
+		
 		// Process files in this folder if exists
 		if ((listFiles != null) && (listFiles.length!=0)){
 			for (int i = 0; i < listFiles.length; i++) {
 				File fils = new File(Path + "\\" + listFiles[i]);
-				if (ID3TagPresent == false) {
-					AudioFile fh;
-					try {
-						
-						fh = AudioFileIO.read(fils);
+				AudioFile fh;
+
+				try {
+					fh = AudioFileIO.read(fils);
+					audioheader = fh.getAudioHeader();
+					
+					if (ID3TagPresent == false) {
 						tag = fh.getTag();
 						if (tag != null)
 						{
 							ID3TagPresent = true;
-							
 							break;
-							//Logger.info(":) - IDTag Present "+tag.getFieldCount()+ " - "+fils.getAbsolutePath());
 						}
-					} catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException e) {
-						// System.err.println("Cannot threat : " + fils);
-						continue;
+						
 					}
+				
+				}catch (org.jaudiotagger.audio.exceptions.InvalidAudioFrameException e1)
+				{
+					continue;
 				}
+				catch ( IOException | TagException | ReadOnlyFileException e1) {
+					Logger.fatal(e1);
+					
+					
+				} catch (CannotReadException e1) {
+					continue;
+				}
+				{
+					
+				}
+				
+				
+				
+				
+				
 			}
 		}
 
-		Logger.info(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
 		
-		if (level>0) {
+		
+		
+		// TODO : Not sure, of the >=0 was >0 but i'm debugging.
+		if (level>=0) {
+			
+			
+			
+			String YEAR = "UNKNOWN_YEAR";
+			String ALBUM = "UNKONWN_ALBUM";
+			ALBUM += " ("+f.getName()+")";
+			String ARTIST = "UNKONWN_ARTIST";
+			
 			if ((ID3TagPresent == true) ) {
 				
 				Logger.info(":) - IDTag Present "+tag.getFieldCount());
-				String YEAR = tag.getFirst(FieldKey.YEAR);
+				YEAR = tag.getFirst(FieldKey.YEAR);
 				if ((YEAR == null) || (YEAR.length() == 0)) {
 					YEAR = "UNKNOWN_YEAR";
 				}
-				String ALBUM = tag.getFirst(FieldKey.ALBUM);
+				ALBUM = tag.getFirst(FieldKey.ALBUM);
 				if ((ALBUM == null) || (ALBUM.length() == 0)) {
 					ALBUM = "UNKONWN_ALBUM";
+					ALBUM += " ("+f.getName()+")";
 				}
-				String ARTIST = tag.getFirst(FieldKey.ARTIST);
+				ARTIST = tag.getFirst(FieldKey.ARTIST);
 				if ((ARTIST == null) || (ARTIST.length() == 0)) {
 					// On connais pas l'artist... ni l'année... donc on mets le nom du repertoire original.
 					ARTIST = "UNKONWN_ARTIST";
-					ALBUM = f.getName();
+					
 				}
-								
+			}
+			else
+			{
+				// Si y'a aucun fichier dans ce reperoite c'est vide donc osef.
+				
+					Logger.info(":( - No Tag present for "+Path);
+					listNOTAG.add(Path);
+				
+				
+					
+			}
+				
+				
+				if (audioheader!=null)
+				{
+					
+					int bitrate;
+					if (audioheader.getBitRate().contains("~")==false)
+						bitrate = Integer.parseInt(audioheader.getBitRate());
+					else
+						bitrate = Integer.parseInt(audioheader.getBitRate().substring(1));
+					int sample = Integer.parseInt(audioheader.getSampleRate());
+					
+					String format = audioheader.getFormat().toUpperCase();
+					/*
+					System.err.println("Format : "+format);
+					System.err.println("Bit : "+bitrate);
+					System.err.println("samp: "+sample);
+					*/
+					if (audioheader.getBitRate().contains("~")==false)
+						ALBUM+= String.format(" - [%s %d kBps %d kHz]", format, bitrate, sample);
+					else
+						ALBUM+= String.format(" - [%s VBR ~%d kBps %d kHz]", format, bitrate, sample);
+					
+				}
+				
+				
+				
+				
 				ARTIST = filterInvalidCaracters(ARTIST, Path);
 				ALBUM = filterInvalidCaracters(ALBUM, Path);
 				// TODO : a tester deja vu un truc genre 2008/2015
 				//YEAR = filterInvalidCaracters(YEAR);
 				
-				Logger.info(String.format(":) - SCN RSLT [%s] [%s] [%s] \r\n", ARTIST, ALBUM, YEAR));
+				Logger.info(String.format(":) - SCN RSLT [%s] [%s] [%s] \r\n",YEAR, ARTIST, ALBUM ));
 				
 		
-				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caract�res foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout �a
+				// TODO : Attention que parfois certains ARTIST ou ALBUM ont des caractères foireux genre : ou ? ou encore dieu sait quoi ... faut virer tout 
 				File destinationDirectory = new File(outputDirectory + "\\" + ARTIST);
 				File destinationDirectoryM =  new File(outputDirectory + "\\" + ARTIST + "\\[" + YEAR + "] " + ALBUM);
 				
@@ -218,7 +312,7 @@ public class SortMP3Directory {
 					destinationDirectory.mkdir();
 					// Creer destination + ARTIST + YEAR_ALBUM 
 					destinationDirectoryM.mkdir();
-					try {
+					
 						CopieRepertoire(f, destinationDirectoryM);
 						
 						// System.err.println("Will delete :" + f);
@@ -227,29 +321,12 @@ public class SortMP3Directory {
 					//	if (ret==false)
 					//		Logger.info(":( - Error DELETING "+f.getAbsolutePath());
 						
-					} catch (Exception e) {
-						e.printStackTrace();
-						file_copy_failed++;
-						Logger.error(String.format(":( - Error COPYING [%s] to [%s] ",f.getAbsolutePath(), destinationDirectoryM.getAbsolutePath()));
-						listCOPYERROR.add(f);
-					}
+					
 
 				}
 			}
-			else
-			{
-				// Si y'a aucun fichier dans ce reperoite c'est vide donc osef.
-				if ((listFiles != null) && (listFiles.length!=0))
-				{
-					Logger.warn(":( - No Tag present for "+Path);
-					
-					listNOTAG.add(Path);
-				}
-				else
-					// TODO : ce test doit etre mis avant le reste du code...
-					Logger.info(":) - Empty directory "+Path);
-			}
-		}
+			
+		
 		
 	}
 
@@ -261,39 +338,46 @@ public class SortMP3Directory {
 		
 		filteredstr = filteredstr.replaceAll("/", "-");
 		filteredstr = filteredstr.replaceAll("\\|", "-");
+		// https://stackoverflow.com/questions/6222215/regex-for-validating-folder-name-file-name
+		filteredstr = filteredstr.replaceAll("\\/?%*:|\"<>", "-");
+		filteredstr = filteredstr.replaceAll("\\?", "-");
+		filteredstr = filteredstr.replaceAll("\\'", " ");
+		filteredstr = filteredstr.replaceAll("\\*", "");
 		
 		
 		if (str.equals(filteredstr)==false)	{
-			Logger.warn("This string ["+str+"] has been filtered to ["+filteredstr+"] on path ["+dir+"]");
+			Logger.info("This string ["+str+"] has been filtered to ["+filteredstr+"] on path ["+dir+"]");
 		}	
 				
 		return filteredstr;
 	}
 
-	private static void CopieRepertoire(File actualDirectory, File destinationDirectory) throws Exception  {
+	private static void CopieRepertoire(File actualDirectory, File destinationDirectory)  {
 		String[] filestoCopy = actualDirectory.list(new FilenameFilter_FILES_ALL());
 		for (int i = 0; i < filestoCopy.length; i++) {
 			File fin = new File(actualDirectory + "\\" + filestoCopy[i]);
 			File fout = new File(destinationDirectory + "\\" + filestoCopy[i]);
 			//System.err.println(fin+"->"+fout);
 			
-			try {
-				Files.copy(fin.toPath(), fout.toPath(), REPLACE_EXISTING);
+			
+				try {
+					Files.copy(fin.toPath(), fout.toPath(), REPLACE_EXISTING);
+					file_copy_success++;
+				} catch (Exception e) {
+					Logger.fatal(String.format(":( - Error COPYING [%s] to [%s] ",fin, fout));
+					file_copy_failed++;
+					listCOPYERROR.add(fin);
+					e.printStackTrace();
+				}
 				
-				file_copy_success++;
+				
 				//boolean ret = fin.delete();
 				//	boolean ret = fin.renameTo(fout);
 				//if (ret == false)
 				//	throw new Exception("Failed to delete : "+fin.getAbsolutePath());
 				//
 				
-			} catch (InvalidPathException e) {
-				file_copy_failed++;
-				e.printStackTrace();
-			} catch (IOException e) {
-				file_copy_failed++;
-				e.printStackTrace();
-			}
+			
 			
 	
 		}
