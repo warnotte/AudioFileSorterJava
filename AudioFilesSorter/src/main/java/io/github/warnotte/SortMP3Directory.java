@@ -20,34 +20,27 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
 import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 
 
-// TODO : Add MAVEN
-// TODO : Add Log4J2
-
 public class SortMP3Directory {
 	
-	protected static Logger Logger; 
-	
 	/**
-	 * 
+	 * CONFIGURATION PART:
 	 * En théorie tu touche a rien d'autres qu'a ça... et tu backup et tu testes avant de lancer tout sinon...
 	 * 
 	 */
 	
 	//static String inputDirectory = "D:\\mp3\\Electro\\Aphex Twin";
-	static String inputDirectory = "D:\\mp3\\Techno";
+	static String inputDirectory = "D:\\mp3\\Rock";
 	static String outputDirectory = "e:\\sorted";
 	static boolean debugMode = false;
 	
 	
-	
-	
+	protected static Logger Logger;
 	
 	private static int DirectoryProcessed = 0;
 	private static int file_copy_failed = 0;
@@ -292,8 +285,8 @@ public class SortMP3Directory {
 				
 				ARTIST = filterInvalidCaracters(ARTIST, Path);
 				ALBUM = filterInvalidCaracters(ALBUM, Path);
-				// TODO : a tester deja vu un truc genre 2008/2015
-				//YEAR = filterInvalidCaracters(YEAR);
+				//TODO : a tester deja vu un truc genre 2008/2015
+				YEAR = filterInvalidCaracters(YEAR, Path);
 				
 				Logger.info(String.format(":) - SCN RSLT [%s] [%s] [%s] \r\n",YEAR, ARTIST, ALBUM ));
 				
@@ -332,6 +325,10 @@ public class SortMP3Directory {
 
 	private static String filterInvalidCaracters(String str, String dir) {
 		
+		if (dir.contains("Expanded"))
+		{
+			System.err.println("");
+		}
 		String regexp = "\\/?%*:|\"<>";
 //		 regexp = "[?]";
 		String filteredstr = str.replaceAll(regexp, "_");
@@ -343,6 +340,9 @@ public class SortMP3Directory {
 		filteredstr = filteredstr.replaceAll("\\?", "-");
 		filteredstr = filteredstr.replaceAll("\\'", " ");
 		filteredstr = filteredstr.replaceAll("\\*", "");
+		filteredstr = filteredstr.replaceAll("\\>", ")");
+		filteredstr = filteredstr.replaceAll("\\<", "(");
+		filteredstr = filteredstr.replaceAll("\\\\", "-");
 		
 		
 		if (str.equals(filteredstr)==false)	{
