@@ -35,8 +35,8 @@ public class SortMP3Directory {
 	 */
 	
 	//static String inputDirectory = "D:\\mp3\\Electro\\Aphex Twin";
-	static String inputDirectory = "D:\\mp3\\Rock";
-	static String outputDirectory = "e:\\sorted";
+	static String inputDirectory = "e:\\manson";
+	static String outputDirectory = "e:\\manson_sorted";
 	static boolean debugMode = false;
 	
 	
