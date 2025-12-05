@@ -6,7 +6,6 @@
 	<name>AudioFilesSorter</name>
 	<description>My Audio file sorting software</description>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>

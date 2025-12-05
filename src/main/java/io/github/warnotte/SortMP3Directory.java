@@ -1,5 +1,3 @@
-
-
 package io.github.warnotte;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
