@@ -5,6 +5,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -46,6 +47,7 @@ public class SortMP3Directory {
 	
 	static List<File> listCOPYERROR = new ArrayList<>();
 	static List<String> listNOTAG = new ArrayList<>();
+	static List<DirectoryReport> directoryReports = new ArrayList<>();
 	
 
 	/**
@@ -55,7 +57,13 @@ public class SortMP3Directory {
 	public static void main(String[] args) throws Exception {
 		
 		deleteDir(new File("logs"));
-		Logger = LogManager.getLogger("SortMP3Directory");;
+		Logger = LogManager.getLogger("SortMP3Directory");
+		directoryReports.clear();
+		listCOPYERROR.clear();
+		listNOTAG.clear();
+		DirectoryProcessed = 0;
+		file_copy_failed = 0;
+		file_copy_success = 0;
 		if (debugMode==false)
 			new File(outputDirectory).mkdir();
 		// Mettre le dernier param�tre a true pour ne pas effectuer les opeération et debug.
@@ -63,39 +71,8 @@ public class SortMP3Directory {
 		
 		
 		
-		Logger.info("-------------------------------------------------");
-		Logger.info("-------------------------------------------------");
-		Logger.info("REPORT ------------------------------------------");
-		Logger.info("-------------------------------------------------");
-		Logger.info("-------------------------------------------------");
 		
-		// List all Error or NO Tag
-		Logger.info("No TAGGED directory : "+listNOTAG.size());
-		Logger.info("COPY ERROR directory : "+listCOPYERROR.size());
-		Logger.info("-------------------------------------------------");
-		if (listNOTAG.size()!=0)
-		for (int i = 0; i < listNOTAG.size(); i++) {
-			Logger.warn("NO TAG OF : "+listNOTAG.get(i));
-		}Logger.info("-------------------------------------------------");
-		if (listCOPYERROR.size()!=0)
-		for (int i = 0; i < listCOPYERROR.size(); i++) {
-			Logger.fatal("COPY ERROR OF : "+listCOPYERROR.get(i));
-		}
-		Logger.info("-------------------------------------------------");
-		
-		Logger.info(":) - Directory processed : " + (DirectoryProcessed-1));
-		
-		if (file_copy_failed>0) {
-			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-			Logger.fatal(String.format(":((- File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success));
-			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-			Logger.fatal("FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! FAIL !!!! ");
-		}
-			
-		else
-			Logger.info(String.format(":) - File copied [%s/%s]\r\n", file_copy_success, file_copy_failed+file_copy_success));
-		
+		logFinalReport();
 		
 		Desktop.getDesktop().open(new File("logs/AudioSort-errors.html"));
 		Desktop.getDesktop().open(new File("logs/AudioSort.html"));
@@ -144,6 +121,8 @@ public class SortMP3Directory {
 		// Ne retrie pas le repertoire de sortie pr�defini par avant... (inutile dans cette m�thode doit etre deporte ? ou ne pas sortir dans le repertoire de traitement et faire une vrai copie)
 		if (Path.contains(outputDirectory))
 			return;
+		DirectoryReport directoryReport = new DirectoryReport(Path);
+		directoryReports.add(directoryReport);
 
 		String listDir[] = f.list(new FilenameFilter_DIR());
 
@@ -159,12 +138,15 @@ public class SortMP3Directory {
 		Tag tag = null;
 		AudioHeader audioheader = null;
 		String listFiles[] = f.list(new FilenameFilter_FILES());
+		int listFilesCount = (listFiles == null) ? 0 : listFiles.length;
+		directoryReport.filesCount = listFilesCount;
 		
-		Logger.info(":) - SCANNING : " + Path + "(" + listFiles.length + ") ");
+		Logger.info(":) - SCANNING : " + Path + "(" + listFilesCount + ") ");
 		if ((listFiles == null) || (listFiles.length==0))
 		{
 			// TODO : ce test doit etre mis avant le reste du code...
 			Logger.info(":) - Empty directory "+Path);
+			directoryReport.empty = true;
 			return;
 		}
 		
@@ -216,9 +198,6 @@ public class SortMP3Directory {
 		
 		// TODO : Not sure, of the >=0 was >0 but i'm debugging.
 		if (level>=0) {
-			
-			
-			
 			String YEAR = "UNKNOWN_YEAR";
 			String ALBUM = "UNKONWN_ALBUM";
 			ALBUM += " ("+f.getName()+")";
@@ -227,6 +206,7 @@ public class SortMP3Directory {
 			if ((ID3TagPresent == true) ) {
 				
 				Logger.info(":) - IDTag Present "+tag.getFieldCount());
+				directoryReport.tagFound = true;
 				YEAR = tag.getFirst(FieldKey.YEAR);
 				if ((YEAR == null) || (YEAR.length() == 0)) {
 					YEAR = "UNKNOWN_YEAR";
@@ -249,6 +229,7 @@ public class SortMP3Directory {
 				
 					Logger.info(":( - No Tag present for "+Path);
 					listNOTAG.add(Path);
+					directoryReport.tagFound = false;
 				
 				
 					
@@ -304,7 +285,11 @@ public class SortMP3Directory {
 					// Creer destination + ARTIST + YEAR_ALBUM 
 					destinationDirectoryM.mkdir();
 					
+						int beforeSuccess = file_copy_success;
+						int beforeFailed = file_copy_failed;
 						CopieRepertoire(f, destinationDirectoryM);
+						directoryReport.copiedCount = file_copy_success - beforeSuccess;
+						directoryReport.errorCount = file_copy_failed - beforeFailed;
 						
 						// System.err.println("Will delete :" + f);
 					//	boolean ret = f.delete();
@@ -319,6 +304,125 @@ public class SortMP3Directory {
 			
 		
 		
+	}
+
+	private static void logFinalReport() {
+		RunTotals totals = computeTotals();
+
+		Logger.info("===================== RUN SUMMARY =====================");
+		Logger.info("Input=" + inputDirectory + " | Output=" + outputDirectory + " | DebugMode=" + debugMode);
+		Logger.info(String.format("Directories: total=%d ok=%d noTag=%d copyError=%d empty=%d",
+				totals.directoriesTotal, totals.okDirs, totals.noTagDirs, totals.copyErrorDirs, totals.emptyDirs));
+		Logger.info(String.format("Files: scanned=%d copied=%d failed=%d", totals.filesSeen, totals.filesCopied, totals.filesFailed));
+		Logger.info("-------------------------------------------------------");
+
+		if (totals.noTagDirs > 0) {
+			Logger.warn("Directories missing tags (" + totals.noTagDirs + "):");
+			listNOTAG.forEach(path -> Logger.warn("NO TAG : " + path));
+			Logger.info("-------------------------------------------------------");
+		}
+		if (totals.copyErrorDirs > 0 || !listCOPYERROR.isEmpty()) {
+			Logger.fatal("Copy errors (" + totals.copyErrorDirs + " dir, " + listCOPYERROR.size() + " files):");
+			listCOPYERROR.forEach(file -> Logger.fatal("COPY ERROR : " + file));
+			Logger.info("-------------------------------------------------------");
+		}
+
+		Logger.info("Per-directory detail (status | files | copied | errors | path)");
+		directoryReports.stream()
+			.sorted(Comparator.comparing(report -> report.path))
+			.forEach(report -> Logger.info(String.format("%-10s | %4d | %4d | %4d | %s",
+					report.status(),
+					report.filesCount,
+					report.copiedCount,
+					report.errorCount,
+					report.path)));
+
+		writeTextReport(totals);
+	}
+
+	private static class DirectoryReport {
+		final String path;
+		int filesCount;
+		int copiedCount;
+		int errorCount;
+		boolean tagFound;
+		boolean empty;
+
+		DirectoryReport(String path) {
+			this.path = path;
+		}
+
+		String status() {
+			if (empty) {
+				return "EMPTY";
+			}
+			if (!tagFound) {
+				return "NO_TAG";
+			}
+			if (errorCount > 0) {
+				return "COPY_ERROR";
+			}
+			return "OK";
+		}
+	}
+	
+	private static RunTotals computeTotals() {
+		RunTotals totals = new RunTotals();
+		totals.directoriesTotal = directoryReports.size();
+		totals.filesCopied = file_copy_success;
+		totals.filesFailed = file_copy_failed;
+		for (DirectoryReport report : directoryReports) {
+			totals.filesSeen += report.filesCount;
+			String status = report.status();
+			if ("OK".equals(status))
+				totals.okDirs++;
+			else if ("NO_TAG".equals(status))
+				totals.noTagDirs++;
+			else if ("COPY_ERROR".equals(status))
+				totals.copyErrorDirs++;
+			else if ("EMPTY".equals(status))
+				totals.emptyDirs++;
+		}
+		return totals;
+	}
+	
+	private static void writeTextReport(RunTotals totals) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("RUN SUMMARY").append(System.lineSeparator());
+		sb.append("Input=").append(inputDirectory).append(" | Output=").append(outputDirectory).append(" | DebugMode=").append(debugMode).append(System.lineSeparator());
+		sb.append(String.format("Directories: total=%d ok=%d noTag=%d copyError=%d empty=%d%n",
+				totals.directoriesTotal, totals.okDirs, totals.noTagDirs, totals.copyErrorDirs, totals.emptyDirs));
+		sb.append(String.format("Files: scanned=%d copied=%d failed=%d%n", totals.filesSeen, totals.filesCopied, totals.filesFailed));
+		sb.append(System.lineSeparator());
+		sb.append("PER DIRECTORY (status | files | copied | errors | path)").append(System.lineSeparator());
+		directoryReports.stream()
+			.sorted(Comparator.comparing(report -> report.path))
+			.forEach(report -> sb.append(String.format("%-10s | %4d | %4d | %4d | %s%n",
+					report.status(),
+					report.filesCount,
+					report.copiedCount,
+					report.errorCount,
+					report.path)));
+		
+		try {
+			Path textReport = Path.of("logs", "report.txt");
+			Files.createDirectories(textReport.getParent());
+			Files.writeString(textReport, sb.toString(), StandardCharsets.UTF_8);
+			Logger.info("Saved summary report to " + textReport.toAbsolutePath());
+		} catch (IOException e) {
+			Logger.error("Failed to write summary report", e);
+		}
+	}
+	
+	private static class RunTotals {
+		int directoriesTotal;
+		int okDirs;
+		int noTagDirs;
+		int copyErrorDirs;
+		int emptyDirs;
+		int filesSeen;
+		int filesCopied;
+		int filesFailed;
 	}
 
 	private static String filterInvalidCaracters(String str, String dir) {
