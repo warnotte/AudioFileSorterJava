@@ -30,5 +30,17 @@
 			<artifactId>jaudiotagger</artifactId>
 			<version>3.0.1</version>
 		</dependency>
+		<!-- Freemarker template engine for HTML reports -->
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.32</version>
+		</dependency>
+		<!-- Gson for JSON reports -->
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.10.1</version>
+		</dependency>
 	</dependencies>
 </project>
