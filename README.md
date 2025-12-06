@@ -47,8 +47,10 @@ mvn clean package -pl audiosorter-cli -am -Pdist
 ```
 
 This creates:
-- `audiosorter-cli/target/AudioFilesSorter-0.2.0-windows.zip` - Distributable ZIP (~62 MB)
+- `audiosorter-cli/target/AudioFilesSorter-0.2.0-windows.zip` - Distributable ZIP (~37 MB)
 - `audiosorter-cli/target/dist/AudioFilesSorter/` - App folder with `AudioFilesSorter.exe`
+
+The distribution uses jlink to create a minimal custom JRE with only the required Java modules.
 
 ## Usage
 

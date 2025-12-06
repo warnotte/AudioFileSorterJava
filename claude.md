@@ -45,14 +45,16 @@ mvn clean package -pl audiosorter-cli -am -Pdist
 ```
 audiosorter-cli/target/
 ├── AudioFilesSorter-0.2.0.jar              # Fat JAR (requires Java)
-├── AudioFilesSorter-0.2.0-windows.zip      # Distributable ZIP (~62 MB)
-└── dist/AudioFilesSorter/                  # App-image folder
+├── AudioFilesSorter-0.2.0-windows.zip      # Distributable ZIP (~37 MB)
+└── dist/AudioFilesSorter/                  # App-image folder (~53 MB)
     ├── AudioFilesSorter.exe                # Windows executable
-    ├── app/                                # Application JAR
-    └── runtime/                            # Embedded JRE (minimal)
+    ├── app/                                # Application JAR (~6 MB)
+    └── runtime/                            # Custom minimal JRE (~47 MB)
 ```
 
 The ZIP can be distributed to users who don't have Java installed.
+
+**JRE Optimization:** The distribution uses jlink to create a minimal custom JRE containing only the required modules (`java.base`, `java.desktop`, `java.sql`, etc.) instead of the full JDK (~152 MB). This reduces the ZIP size from ~62 MB to ~37 MB (40% smaller).
 
 ## CLI Usage
 
@@ -253,6 +255,7 @@ Reports are generated in the `reports/` directory:
 - [x] **Tag editor integration** - Modal with copy path, open folder, links to tagging tools
 - [x] **Multi-module Maven** - Separate core, cli, gui modules
 - [x] **Windows distribution** - jpackage app-image with embedded JRE + ZIP
+- [x] **Minimal JRE with jlink** - Custom JRE with only required modules (~37 MB ZIP vs ~62 MB)
 
 **Planned:**
 - [ ] **GUI Implementation** - Full Swing GUI with scan progress, results display

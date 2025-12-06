@@ -78,12 +78,55 @@
     </build>
 
     <profiles>
-        <!-- Profile for creating distributable app-image with embedded JRE -->
+        <!-- Profile for creating distributable app-image with minimal JRE -->
         <profile>
             <id>dist</id>
+            <properties>
+                <!-- JDK modules required by the application (determined via jdeps) -->
+                <jlink.modules>java.base,java.compiler,java.desktop,java.management,java.naming,java.rmi,java.scripting,java.sql</jlink.modules>
+            </properties>
             <build>
                 <plugins>
-                    <!-- jpackage to create app-image with embedded JRE -->
+                    <!-- Step 1: Create minimal custom JRE with jlink -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>create-custom-jre</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <!-- Delete existing dirs to allow rebuild -->
+                                        <delete dir="${project.build.directory}/custom-jre" quiet="true"/>
+                                        <delete dir="${project.build.directory}/dist" quiet="true"/>
+                                        <delete dir="${project.build.directory}/jpackage-input" quiet="true"/>
+                                        <!-- Run jlink to create minimal JRE -->
+                                        <exec executable="jlink" failonerror="true">
+                                            <arg value="--add-modules"/>
+                                            <arg value="${jlink.modules}"/>
+                                            <arg value="--strip-debug"/>
+                                            <arg value="--no-man-pages"/>
+                                            <arg value="--no-header-files"/>
+                                            <arg value="--compress=zip-6"/>
+                                            <arg value="--output"/>
+                                            <arg value="${project.build.directory}/custom-jre"/>
+                                        </exec>
+                                        <!-- Create input dir with only the fat JAR -->
+                                        <mkdir dir="${project.build.directory}/jpackage-input"/>
+                                        <copy file="${project.build.directory}/AudioFilesSorter-${project.version}.jar"
+                                              todir="${project.build.directory}/jpackage-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Step 2: jpackage using the custom minimal JRE -->
                     <plugin>
                         <groupId>org.panteleyev</groupId>
                         <artifactId>jpackage-maven-plugin</artifactId>
@@ -101,10 +144,12 @@
                                     <appVersion>${app.version}</appVersion>
                                     <vendor>warnotte</vendor>
                                     <description>Audio file sorting and cataloging tool</description>
-                                    <input>${project.build.directory}</input>
+                                    <input>${project.build.directory}/jpackage-input</input>
                                     <mainJar>AudioFilesSorter-${project.version}.jar</mainJar>
                                     <mainClass>io.github.warnotte.audiosorter.cli.Main</mainClass>
                                     <destination>${project.build.directory}/dist</destination>
+                                    <!-- Use custom minimal JRE (47 MB) instead of full JDK (152 MB) -->
+                                    <runtimeImage>${project.build.directory}/custom-jre</runtimeImage>
                                     <javaOptions>
                                         <option>-Xmx512m</option>
                                     </javaOptions>
