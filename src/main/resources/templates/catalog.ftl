@@ -1390,6 +1390,7 @@ function applyFilters() {
     let visibleTracks = 0;
     let matchedTracks = 0;
 
+    // Filter main catalog (artist sections)
     document.querySelectorAll('.artist-section').forEach(section => {
         if (currentView === 'artist' && section.dataset.artist !== currentArtist) {
             section.classList.add('hidden');
@@ -1432,6 +1433,46 @@ function applyFilters() {
         section.classList.toggle('hidden', !hasVisibleAlbum);
         if (hasVisibleAlbum) visibleArtists++;
     });
+
+    // Filter untagged albums section
+    const untaggedSection = document.getElementById('untaggedSection');
+    const untaggedContent = document.getElementById('untaggedContent');
+    if (untaggedSection && untaggedContent) {
+        const untaggedAlbums = untaggedContent.querySelectorAll('.album-card');
+        let hasVisibleUntagged = false;
+
+        untaggedAlbums.forEach(album => {
+            const albumName = album.dataset.albumLower || '';
+            const albumFormat = album.dataset.format || '';
+            const albumYear = album.dataset.year || '';
+            const trackNames = album.dataset.trackNames || '';
+            const folderName = (album.dataset.path || '').toLowerCase();
+
+            // Search in folder name, album, and track names (no artist for untagged)
+            const matchesFolder = folderName.includes(query);
+            const matchesAlbum = albumName.includes(query);
+            const matchesTrack = trackNames.includes(query);
+            const matchesSearch = !query || matchesFolder || matchesAlbum || matchesTrack;
+
+            const matchesFormat = !format || albumFormat === format;
+            const matchesYear = !year || albumYear === year;
+
+            const visible = matchesSearch && matchesFormat && matchesYear;
+            album.classList.toggle('hidden', !visible);
+
+            // Highlight if matched by track
+            album.classList.toggle('track-match', visible && matchesTrack && !matchesFolder && !matchesAlbum);
+
+            if (visible) {
+                hasVisibleUntagged = true;
+                visibleAlbums++;
+                visibleTracks += parseInt(album.dataset.trackCount || 0);
+            }
+        });
+
+        // Show/hide entire untagged section based on matches
+        untaggedSection.classList.toggle('hidden', !hasVisibleUntagged);
+    }
 
     // Update stats
     document.getElementById('statsArtists').textContent = visibleArtists;
