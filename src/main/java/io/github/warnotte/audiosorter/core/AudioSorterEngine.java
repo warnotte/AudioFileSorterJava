@@ -123,6 +123,7 @@ public class AudioSorterEngine {
         // Get all files and audio files in this directory
         File[] allFiles = directory.listFiles(File::isFile);
         File[] audioFiles = directory.listFiles((dir, name) -> config.isAudioFile(name));
+        File[] imageFiles = directory.listFiles((dir, name) -> isImageFile(name));
         int totalFileCount = allFiles == null ? 0 : allFiles.length;
         int fileCount = audioFiles == null ? 0 : audioFiles.length;
         int nonAudioCount = totalFileCount - fileCount;
@@ -130,6 +131,12 @@ public class AudioSorterEngine {
 
         // Track file counts for statistics
         runTotals.addFileCounts(totalFileCount, nonAudioCount);
+
+        // Check for cover art
+        if (imageFiles != null && imageFiles.length > 0) {
+            report.setHasImageFile(true);
+            report.setCoverImagePath(imageFiles[0].getAbsolutePath());
+        }
 
         if (fileCount == 0) {
             // Only mark as truly empty if no subdirectories (parent dirs are normal)
@@ -308,6 +315,13 @@ public class AudioSorterEngine {
 
             processedFiles++;
         }
+    }
+
+    private boolean isImageFile(String filename) {
+        String lower = filename.toLowerCase();
+        return lower.endsWith(".jpg") || lower.endsWith(".jpeg") ||
+               lower.endsWith(".png") || lower.endsWith(".gif") ||
+               lower.endsWith(".bmp") || lower.endsWith(".webp");
     }
 
     private String filterInvalidCharacters(String str, Path directory) {

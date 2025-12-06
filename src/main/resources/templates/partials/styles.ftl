@@ -470,3 +470,33 @@ footer {
     .datatable-wrapper .datatable-table th,
     .datatable-wrapper .datatable-table td { padding: 0.5rem; }
 }
+
+/* Catalog link */
+.catalog-link {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.catalog-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Clickable path links */
+.path-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.8rem;
+}
+
+.path-link:hover {
+    text-decoration: underline;
+    color: #2563eb;
+}

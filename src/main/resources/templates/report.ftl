@@ -25,6 +25,7 @@
         <header>
             <h1>AudioFilesSorter Report</h1>
             <p class="subtitle">Generated on ${generatedAt} - Duration: ${durationFormatted}</p>
+            <p style="margin-top: 1rem;"><a href="catalog.html" class="catalog-link">View Music Catalog</a></p>
         </header>
 
         <!-- Configuration -->
@@ -78,6 +79,10 @@
                     <div class="stat-item">
                         <div class="stat-value">${emptyDirs}</div>
                         <div class="stat-label">Empty</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value warning">${duplicateAlbumsCount}</div>
+                        <div class="stat-label">Duplicates</div>
                     </div>
                 </div>
 
@@ -167,6 +172,121 @@
             </div>
         </div>
 
+        <!-- Analysis Section -->
+        <#if (smallAlbums?size > 0) || (suspiciousYears?size > 0) || (missingCovers?size > 0)>
+        <div class="card">
+            <div class="card-header" onclick="toggleSection(this)">
+                <h2>Analysis</h2>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <#if smallAlbums?size gt 0>
+                <div class="alert" style="background: #e0f2fe; border-left: 4px solid #0ea5e9;">
+                    <div class="alert-header" onclick="toggleSection(this)">
+                        <div class="alert-title">Small Albums - ≤2 files (${smallAlbums?size})</div>
+                        <span class="collapse-icon">▼</span>
+                    </div>
+                    <div class="alert-content collapsed">
+                        <p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: #666;">May be singles, EPs, or incomplete albums.</p>
+                        <ul style="margin-left: 1rem;">
+                            <#list smallAlbums as dir>
+                            <li style="margin-bottom: 0.25rem;">
+                                <a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a>
+                                <span class="metadata-tag">${dir.filesCount} file(s)</span>
+                                <#if dir.artist?? && dir.album??>
+                                <span style="color: #666;"> - ${dir.artist} / ${dir.album}</span>
+                                </#if>
+                            </li>
+                            </#list>
+                        </ul>
+                    </div>
+                </div>
+                </#if>
+
+                <#if suspiciousYears?size gt 0>
+                <div class="alert" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                    <div class="alert-header" onclick="toggleSection(this)">
+                        <div class="alert-title">Suspicious Years (${suspiciousYears?size})</div>
+                        <span class="collapse-icon">▼</span>
+                    </div>
+                    <div class="alert-content collapsed">
+                        <p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: #666;">Years before 1900 or in the future - likely typos.</p>
+                        <ul style="margin-left: 1rem;">
+                            <#list suspiciousYears as dir>
+                            <li style="margin-bottom: 0.25rem;">
+                                <a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a>
+                                <span class="metadata-tag" style="background: #fef3c7;">${dir.year!'-'}</span>
+                                <#if dir.artist?? && dir.album??>
+                                <span style="color: #666;"> - ${dir.artist} / ${dir.album}</span>
+                                </#if>
+                            </li>
+                            </#list>
+                        </ul>
+                    </div>
+                </div>
+                </#if>
+
+                <#if missingCovers?size gt 0>
+                <div class="alert" style="background: #f3f4f6; border-left: 4px solid #6b7280;">
+                    <div class="alert-header" onclick="toggleSection(this)">
+                        <div class="alert-title">Missing Cover Art (${missingCovers?size})</div>
+                        <span class="collapse-icon">▼</span>
+                    </div>
+                    <div class="alert-content collapsed">
+                        <p style="margin-bottom: 0.5rem; font-size: 0.85rem; color: #666;">No image file (jpg, png) found in directory.</p>
+                        <ul style="margin-left: 1rem;">
+                            <#list missingCovers as dir>
+                            <li style="margin-bottom: 0.25rem;"><a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a></li>
+                            </#list>
+                        </ul>
+                    </div>
+                </div>
+                </#if>
+            </div>
+        </div>
+        </#if>
+
+        <!-- Duplicate Albums Section -->
+        <#if (duplicateAlbums?size > 0)>
+        <div class="card">
+            <div class="card-header" onclick="toggleSection(this)">
+                <h2>Duplicate Albums (${duplicateAlbumsCount})</h2>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="card-content">
+                <p style="margin-bottom: 1rem; color: var(--color-text-secondary);">
+                    Albums found in multiple formats/locations. Consider keeping only the best quality version.
+                </p>
+                <#list duplicateAlbums as group>
+                <div class="alert" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+                    <div class="alert-header" onclick="toggleSection(this)">
+                        <div class="alert-title">${group.artist} - ${group.album} (${group.count} copies)</div>
+                        <span class="collapse-icon">▼</span>
+                    </div>
+                    <div class="alert-content collapsed">
+                        <table style="width: 100%; font-size: 0.85rem;">
+                            <tr style="background: rgba(0,0,0,0.05);">
+                                <th style="padding: 0.5rem; text-align: left;">Path</th>
+                                <th style="padding: 0.5rem; text-align: left;">Format</th>
+                                <th style="padding: 0.5rem; text-align: right;">Bitrate</th>
+                                <th style="padding: 0.5rem; text-align: right;">Files</th>
+                            </tr>
+                            <#list group.directories as dir>
+                            <tr>
+                                <td style="padding: 0.5rem;"><a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a></td>
+                                <td style="padding: 0.5rem;">${dir.format!'-'}</td>
+                                <td style="padding: 0.5rem; text-align: right;"><#if dir.bitrate??>${dir.bitrate} kbps<#else>-</#if></td>
+                                <td style="padding: 0.5rem; text-align: right;">${dir.filesCount}</td>
+                            </tr>
+                            </#list>
+                        </table>
+                    </div>
+                </div>
+                </#list>
+            </div>
+        </div>
+        </#if>
+
         <!-- Problems Section -->
         <#if (directoriesWithoutTags?size > 0) || (failedFiles?size > 0) || (emptyDirectories?size > 0)>
         <div class="card">
@@ -184,7 +304,7 @@
                     <div class="alert-content collapsed">
                         <ul style="margin-left: 1rem;">
                             <#list directoriesWithoutTags as dir>
-                            <li class="path-cell" style="margin-bottom: 0.25rem;">${dir.path}</li>
+                            <li style="margin-bottom: 0.25rem;"><a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a></li>
                             </#list>
                         </ul>
                     </div>
@@ -201,7 +321,7 @@
                         <ul style="margin-left: 1rem;">
                             <#list failedFiles as file>
                             <li style="margin-bottom: 0.5rem;">
-                                <span class="path-cell">${file.source}</span>
+                                <a href="file:///${file.source?replace('\\', '/')}" target="_blank" class="path-link">${file.source}</a>
                                 <br><small style="color: #991b1b;">${file.errorMessage!'-'}</small>
                             </li>
                             </#list>
@@ -219,7 +339,7 @@
                     <div class="alert-content collapsed">
                         <ul style="margin-left: 1rem;">
                             <#list emptyDirectories as dir>
-                            <li class="path-cell" style="margin-bottom: 0.25rem;">${dir.path}</li>
+                            <li style="margin-bottom: 0.25rem;"><a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a></li>
                             </#list>
                         </ul>
                     </div>
@@ -254,7 +374,7 @@
                         <#list directories as dir>
                         <tr>
                             <td data-sort="${dir.status}"><span class="status-badge ${dir.statusClass}">${dir.status}</span></td>
-                            <td class="path-cell" title="${dir.path}">${dir.path}</td>
+                            <td title="${dir.path}"><a href="file:///${dir.path?replace('\\', '/')}" target="_blank" class="path-link">${dir.path}</a></td>
                             <td>${dir.artist!'-'}</td>
                             <td>
                                 ${dir.album!'-'}

@@ -40,11 +40,21 @@ public class HtmlReportGenerator implements ReportGenerator {
     public void generate(RunTotals totals, SortConfiguration config, Path outputPath) throws IOException {
         Map<String, Object> model = buildModel(totals, config);
 
+        // Generate main report
         try (Writer writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8)) {
             Template template = freemarkerConfig.getTemplate("report.ftl");
             template.process(model, writer);
         } catch (TemplateException e) {
             throw new IOException("Failed to process template", e);
+        }
+
+        // Generate catalog page
+        Path catalogPath = outputPath.resolveSibling("catalog.html");
+        try (Writer writer = Files.newBufferedWriter(catalogPath, StandardCharsets.UTF_8)) {
+            Template template = freemarkerConfig.getTemplate("catalog.ftl");
+            template.process(model, writer);
+        } catch (TemplateException e) {
+            throw new IOException("Failed to process catalog template", e);
         }
     }
 
@@ -103,6 +113,61 @@ public class HtmlReportGenerator implements ReportGenerator {
             .toList();
         model.put("emptyDirectories", emptyDirsList);
 
+        // Duplicate albums detection (same Artist + Album, different formats)
+        Map<String, List<DirectoryReport>> albumGroups = totals.getDirectoryReports().stream()
+            .filter(r -> r.getArtist() != null && r.getAlbum() != null && !r.isEmpty())
+            .collect(Collectors.groupingBy(
+                r -> normalizeForDuplicateCheck(r.getArtist()) + " /// " + normalizeForDuplicateCheck(r.getAlbum())
+            ));
+        List<Map<String, Object>> duplicateGroups = albumGroups.entrySet().stream()
+            .filter(e -> e.getValue().size() > 1)
+            .sorted(Comparator.comparing(Map.Entry::getKey))
+            .map(e -> {
+                Map<String, Object> group = new HashMap<>();
+                String[] parts = e.getKey().split(" /// ");
+                group.put("artist", parts[0]);
+                group.put("album", parts.length > 1 ? parts[1] : "");
+                group.put("count", e.getValue().size());
+                group.put("directories", e.getValue().stream()
+                    .map(this::mapDirectoryReport)
+                    .toList());
+                return group;
+            })
+            .toList();
+        model.put("duplicateAlbums", duplicateGroups);
+        model.put("duplicateAlbumsCount", duplicateGroups.size());
+
+        // Small albums (≤2 files) - might be singles or incomplete
+        List<Map<String, Object>> smallAlbums = totals.getDirectoryReports().stream()
+            .filter(r -> !r.isEmpty() && r.getFilesCount() <= 2)
+            .sorted(Comparator.comparing(r -> r.getFilesCount()))
+            .map(this::mapDirectoryReport)
+            .toList();
+        model.put("smallAlbums", smallAlbums);
+
+        // Suspicious years (< 1900 or > current year + 1)
+        int currentYear = java.time.Year.now().getValue();
+        List<Map<String, Object>> suspiciousYears = totals.getDirectoryReports().stream()
+            .filter(r -> !r.isEmpty() && r.getYear() != null && !r.getYear().contains("UNKNOWN"))
+            .filter(r -> {
+                try {
+                    int year = Integer.parseInt(normalizeYear(r.getYear()));
+                    return year < 1900 || year > currentYear + 1;
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            })
+            .map(this::mapDirectoryReport)
+            .toList();
+        model.put("suspiciousYears", suspiciousYears);
+
+        // Missing cover art (no image files in directory) - only for dirs with audio files
+        List<Map<String, Object>> missingCovers = totals.getDirectoryReports().stream()
+            .filter(r -> !r.isEmpty() && r.getFilesCount() > 0 && !r.hasImageFile())
+            .map(this::mapDirectoryReport)
+            .toList();
+        model.put("missingCovers", missingCovers);
+
         // Failed files
         List<Map<String, Object>> failedFilesList = totals.getFailedFiles().stream()
             .map(this::mapFileReport)
@@ -111,6 +176,19 @@ public class HtmlReportGenerator implements ReportGenerator {
 
         // Statistics for charts
         model.put("chartData", buildChartData(totals));
+
+        // Catalog data - grouped by artist, sorted
+        Map<String, List<Map<String, Object>>> catalogByArtist = totals.getDirectoryReports().stream()
+            .filter(r -> !r.isEmpty() && r.getFilesCount() > 0)
+            .filter(r -> r.getArtist() != null && !r.getArtist().contains("UNKNOWN"))
+            .collect(Collectors.groupingBy(
+                DirectoryReport::getArtist,
+                TreeMap::new,
+                Collectors.mapping(this::mapDirectoryReport, Collectors.toList())
+            ));
+        model.put("catalogByArtist", catalogByArtist);
+        model.put("catalogArtistCount", catalogByArtist.size());
+        model.put("catalogAlbumCount", catalogByArtist.values().stream().mapToInt(List::size).sum());
 
         return model;
     }
@@ -207,6 +285,13 @@ public class HtmlReportGenerator implements ReportGenerator {
         return chartData;
     }
 
+    private String normalizeForDuplicateCheck(String str) {
+        if (str == null) return "";
+        return str.toLowerCase()
+            .replaceAll("[^a-z0-9]", "") // Keep only alphanumeric
+            .trim();
+    }
+
     private String normalizeYear(String year) {
         if (year == null || year.contains("UNKNOWN")) return "Unknown";
         // Extract first 4 digits (handles "2008/2015" or "2008-01-01")
@@ -238,6 +323,8 @@ public class HtmlReportGenerator implements ReportGenerator {
         map.put("errorCount", report.getErrorCount());
         map.put("tagFound", report.isTagFound());
         map.put("empty", report.isEmpty());
+        map.put("hasImageFile", report.hasImageFile());
+        map.put("coverImagePath", report.getCoverImagePath());
         map.put("artist", report.getArtist());
         map.put("album", report.getAlbum());
         map.put("year", report.getYear());

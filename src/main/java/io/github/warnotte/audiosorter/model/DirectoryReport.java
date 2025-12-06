@@ -24,6 +24,8 @@ public class DirectoryReport {
 
     private boolean tagFound = false;
     private boolean empty = false;
+    private boolean hasImageFile = false;
+    private String coverImagePath = null; // Path to first image file found
     private int scannedFilesCount = 0; // Number of audio files found (even in debug mode)
 
     // Extracted metadata
@@ -72,6 +74,22 @@ public class DirectoryReport {
 
     public void setEmpty(boolean empty) {
         this.empty = empty;
+    }
+
+    public boolean hasImageFile() {
+        return hasImageFile;
+    }
+
+    public void setHasImageFile(boolean hasImageFile) {
+        this.hasImageFile = hasImageFile;
+    }
+
+    public String getCoverImagePath() {
+        return coverImagePath;
+    }
+
+    public void setCoverImagePath(String coverImagePath) {
+        this.coverImagePath = coverImagePath;
     }
 
     public String getArtist() {

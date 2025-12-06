@@ -95,9 +95,10 @@ static boolean debugMode = false;
 The HTML report (`reports/report.html`) includes:
 
 **Summary Section:**
-- Directory statistics (total, OK, missing tags, errors, empty)
+- Directory statistics (total, OK, missing tags, errors, empty, duplicates)
 - File statistics (total files, audio files, other files, copied, failed)
 - Data copied (MB) and success rate progress bar
+- Link to Music Catalog page
 
 **Collection Statistics Charts:**
 - Directory Status (doughnut)
@@ -108,24 +109,48 @@ The HTML report (`reports/report.html`) includes:
 - Albums by Year (bar with tooltip showing album list)
 - Files by Year (bar)
 
+**Analysis Section (collapsible sub-sections):**
+- Small Albums (≤2 files) - may be singles/EPs
+- Suspicious Years (before 1900 or future)
+- Missing Cover Art (no image file in directory)
+
+**Duplicate Albums Section:**
+- Detects same Artist + Album in different formats/locations
+- Shows format, bitrate, file count for comparison
+
 **Problems Panel (collapsible sub-sections):**
 - Directories Without Tags - collapsed by default
 - Failed File Copies - collapsed by default
 - Empty Directories (no audio and no subdirs) - collapsed by default
+- All paths are clickable links (file:// URLs)
 
 **Directory Details Table:**
 - Sortable and searchable with Simple-DataTables
 - Columns: Status, Path, Artist, Album, Year, Files, Copied, Errors
+- Clickable path links
 
 **Templates:**
-- `src/main/resources/templates/report.ftl` - Main template
+- `src/main/resources/templates/report.ftl` - Main report template
+- `src/main/resources/templates/catalog.ftl` - Music catalog template
 - `src/main/resources/templates/partials/styles.ftl` - CSS styles
 - `src/main/resources/templates/partials/charts.ftl` - Chart.js code
+
+## Music Catalog
+
+A separate catalog page (`reports/catalog.html`) provides a visual music library view:
+
+- Dark-themed Spotify-like interface
+- Artists grouped alphabetically with quick-jump navigation
+- Album cards with cover art (from first image file in directory)
+- Album metadata: year, format, bitrate, file count
+- Search/filter by artist or album name
+- Click album to open directory in file explorer
 
 ## Reports
 
 Reports are generated in the `reports/` directory:
 - `reports/report.html` - Modern HTML report with statistics, tables, and charts
+- `reports/catalog.html` - Visual music catalog with album covers
 - `reports/report.json` - Structured JSON for programmatic access
 
 ## Logging
@@ -146,10 +171,14 @@ Both logs/ and reports/ directories are cleaned on each run.
 
 ## TODO / Future Work
 
+- [ ] **Separate Scanner from Sorter** - Split into two independent tools:
+  - `MusicScanner` - Scans directories, extracts metadata, generates reports/catalog (no file copying)
+  - `MusicSorter` - Uses scanner data to copy/move files into organized structure
+  - Shared: metadata extraction, report generation, catalog generation
 - [ ] **GUI Implementation** - Create Swing/JavaFX GUI using `SortProgressListener` interface
 - [ ] **Export problems to CSV** - Allow exporting the Problems lists for batch processing
 - [ ] **Tag editor integration** - Quick edit for directories without tags
-- [ ] **Duplicate detection** - Identify duplicate albums across the collection
+- [x] **Duplicate detection** - Identify duplicate albums across the collection (DONE)
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
 - [ ] **Preview mode** - Show what would be done without actually copying
 - [ ] **Undo/rollback** - Keep track of operations for potential rollback
