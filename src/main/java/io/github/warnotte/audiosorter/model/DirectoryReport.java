@@ -26,6 +26,8 @@ public class DirectoryReport {
     private boolean empty = false;
     private boolean hasImageFile = false;
     private String coverImagePath = null; // Path to first image file found
+    private String firstAudioFilePath = null; // Path to first audio file (for playback)
+    private List<String> audioFilePaths = new ArrayList<>(); // All audio file paths
     private int scannedFilesCount = 0; // Number of audio files found (even in debug mode)
 
     // Extracted metadata
@@ -90,6 +92,29 @@ public class DirectoryReport {
 
     public void setCoverImagePath(String coverImagePath) {
         this.coverImagePath = coverImagePath;
+    }
+
+    public String getFirstAudioFilePath() {
+        return firstAudioFilePath;
+    }
+
+    public void setFirstAudioFilePath(String firstAudioFilePath) {
+        this.firstAudioFilePath = firstAudioFilePath;
+    }
+
+    public List<String> getAudioFilePaths() {
+        return audioFilePaths;
+    }
+
+    public void setAudioFilePaths(List<String> audioFilePaths) {
+        this.audioFilePaths = audioFilePaths;
+    }
+
+    public void addAudioFilePath(String path) {
+        this.audioFilePaths.add(path);
+        if (this.firstAudioFilePath == null) {
+            this.firstAudioFilePath = path;
+        }
     }
 
     public String getArtist() {

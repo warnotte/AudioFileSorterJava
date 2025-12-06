@@ -178,9 +178,10 @@ public class HtmlReportGenerator implements ReportGenerator {
         model.put("chartData", buildChartData(totals));
 
         // Catalog data - grouped by artist, sorted
+        // Only exclude if artist is exactly the default "UNKNOWN_ARTIST", not if it just contains "UNKNOWN"
         Map<String, List<Map<String, Object>>> catalogByArtist = totals.getDirectoryReports().stream()
             .filter(r -> !r.isEmpty() && r.getFilesCount() > 0)
-            .filter(r -> r.getArtist() != null && !r.getArtist().contains("UNKNOWN"))
+            .filter(r -> r.getArtist() != null && !r.getArtist().equals("UNKNOWN_ARTIST"))
             .collect(Collectors.groupingBy(
                 DirectoryReport::getArtist,
                 TreeMap::new,
@@ -325,6 +326,8 @@ public class HtmlReportGenerator implements ReportGenerator {
         map.put("empty", report.isEmpty());
         map.put("hasImageFile", report.hasImageFile());
         map.put("coverImagePath", report.getCoverImagePath());
+        map.put("firstAudioFilePath", report.getFirstAudioFilePath());
+        map.put("audioFilePaths", report.getAudioFilePaths());
         map.put("artist", report.getArtist());
         map.put("album", report.getAlbum());
         map.put("year", report.getYear());

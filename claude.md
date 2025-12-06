@@ -168,12 +168,33 @@ The HTML report (`reports/report.html`) includes:
 
 A separate catalog page (`reports/catalog.html`) provides a visual music library view:
 
-- Dark-themed Spotify-like interface
+**Design:**
+- Dark-themed Spotify-like SPA (Single Page Application) interface
 - Artists grouped alphabetically with quick-jump navigation
 - Album cards with cover art (from first image file in directory)
+- Header with mosaic background from album covers
 - Album metadata: year, format, bitrate, file count
-- Search/filter by artist or album name
-- Click album to open directory in file explorer
+
+**Features:**
+- **Search/Filter** - Search by artist, album name, or track filename
+  - Track matches highlighted with green border and "♪ Track match" badge
+- **Format & Year filters** - Dropdown filters with active filter tags
+- **Statistics** - Artists/Albums/Tracks counts update dynamically when filtering
+
+**Audio Player (SPA):**
+- Fixed bottom player bar with album cover, track info, controls
+- Play/Pause, Next/Previous track navigation
+- Progress bar with seek functionality
+- Volume control
+- Playback persists across page navigation
+- **Resume playback on page reload** - Shows a resume banner if music was playing
+
+**Technical Implementation:**
+- Audio player uses HTML5 Audio API with `file://` URLs
+- Playback state saved to localStorage (track, position, volume)
+- `data-track-names` attribute for track filename search
+- `data-tracks` attribute contains all audio file paths for album playback
+- Cover images served via `file:///` protocol
 
 ## Reports
 
@@ -200,15 +221,22 @@ Both logs/ and reports/ directories are cleaned on each run.
 
 ## TODO / Future Work
 
-- [x] **Separate Scanner from Sorter** - Split into two independent tools (DONE)
+**Completed:**
+- [x] **Separate Scanner from Sorter** - Split into two independent tools
   - `MusicScanner` - Scans directories, extracts metadata
   - `MusicSorter` - Copies/organizes files based on scan results
   - `AudioSorterEngine` - Facade combining both
-- [x] **Duplicate detection** - Identify duplicate albums across the collection (DONE)
-- [x] **Picocli CLI** - Professional CLI with subcommands (scan/sort) (DONE)
+- [x] **Duplicate detection** - Identify duplicate albums across the collection
+- [x] **Picocli CLI** - Professional CLI with subcommands (scan/sort)
+- [x] **Music Catalog SPA** - Full audio playback with track navigation
+- [x] **Track filename search** - Search finds albums containing matching track names
+- [x] **Playback persistence** - Resume playback after page reload
+
+**In Progress / Planned:**
+- [ ] **Untagged albums section** - Separate section in catalog for UNKNOWN_ARTIST albums
+- [ ] **Tag editor integration** - Edit ID3 tags directly from the catalog
 - [ ] **GUI Implementation** - Create Swing/JavaFX GUI using `ScanProgressListener` interface
 - [ ] **Export problems to CSV** - Allow exporting the Problems lists for batch processing
-- [ ] **Tag editor integration** - Quick edit for directories without tags
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
 - [ ] **Undo/rollback** - Keep track of operations for potential rollback
 - [ ] **Multi-threaded copying** - Parallel file copy for better performance

@@ -154,6 +154,13 @@ public class MusicScanner {
             report.setCoverImagePath(imageFiles[0].getAbsolutePath());
         }
 
+        // Store audio file paths for playback
+        if (audioFiles != null) {
+            for (File audioFile : audioFiles) {
+                report.addAudioFilePath(audioFile.getAbsolutePath());
+            }
+        }
+
         if (fileCount == 0) {
             // Only mark as truly empty if no subdirectories (parent dirs are normal)
             if (subdirCount == 0) {
