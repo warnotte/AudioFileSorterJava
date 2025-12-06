@@ -52,6 +52,18 @@ This creates:
 
 The distribution uses jlink to create a minimal custom JRE with only the required Java modules.
 
+### Build Native Executable (with GraalVM)
+
+Create a native executable with instant startup (no JRE required):
+
+```bash
+build-native.bat D:\Music\TestFolder
+```
+
+This creates `audiosorter-cli/target/AudioFilesSorter-native.exe` (~60 MB, ~20 MB with UPX compression).
+
+**Prerequisites:** GraalVM JDK, Visual Studio Build Tools, run from "x64 Native Tools Command Prompt".
+
 ## Usage
 
 ### CLI (with Java installed)

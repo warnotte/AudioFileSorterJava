@@ -38,6 +38,9 @@ mvn package -pl audiosorter-cli -am
 
 # Build Windows distribution with embedded JRE (no Java required on target)
 mvn clean package -pl audiosorter-cli -am -Pdist
+
+# Build native executable with GraalVM (smallest, fastest startup)
+build-native.bat D:\Music\TestFolder
 ```
 
 ### Distribution Output (with -Pdist profile)
@@ -55,6 +58,20 @@ audiosorter-cli/target/
 The ZIP can be distributed to users who don't have Java installed.
 
 **JRE Optimization:** The distribution uses jlink to create a minimal custom JRE containing only the required modules (`java.base`, `java.desktop`, `java.sql`, etc.) instead of the full JDK (~152 MB). This reduces the ZIP size from ~62 MB to ~37 MB (40% smaller).
+
+### Native Executable (with GraalVM)
+
+```
+audiosorter-cli/target/
+└── AudioFilesSorter-native.exe    # Native executable (~60 MB, ~20 MB with UPX)
+```
+
+**Prerequisites:**
+- GraalVM JDK installed and in PATH
+- Visual Studio Build Tools (MSVC compiler)
+- Run from "x64 Native Tools Command Prompt"
+
+**Benefits:** Instant startup, no JRE required, single file distribution.
 
 ## CLI Usage
 
@@ -256,6 +273,7 @@ Reports are generated in the `reports/` directory:
 - [x] **Multi-module Maven** - Separate core, cli, gui modules
 - [x] **Windows distribution** - jpackage app-image with embedded JRE + ZIP
 - [x] **Minimal JRE with jlink** - Custom JRE with only required modules (~37 MB ZIP vs ~62 MB)
+- [x] **GraalVM native-image** - Native executable build script (~60 MB, ~20 MB with UPX)
 
 **Planned:**
 - [ ] **GUI Implementation** - Full Swing GUI with scan progress, results display
