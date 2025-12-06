@@ -2,3 +2,5 @@
 /target/
 /logs/
 /.idea/
+/reports/
+dependency-reduced-pom.xml

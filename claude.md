@@ -10,15 +10,24 @@ mvn clean package
 
 # Compile only (no JAR)
 mvn compile
+```
 
-# Run the NEW architecture (recommended)
-java -cp "target/AudioFilesSorter-0.1.0.jar" io.github.warnotte.audiosorter.cli.Main [inputDir] [outputDir] [debugMode]
+## CLI Usage (picocli)
 
-# Run the legacy entry point
-java -cp "target/AudioFilesSorter-0.1.0.jar" io.github.warnotte.SortMP3Directory
+```bash
+# Show help
+java -jar target/AudioFilesSorter-0.1.0.jar --help
 
-# Run the extension lister utility
-java -cp "target/AudioFilesSorter-0.1.0.jar" io.github.warnotte.ExtensionLister
+# Scan a directory (generate reports/catalog without copying files)
+java -jar target/AudioFilesSorter-0.1.0.jar scan D:\Music
+java -jar target/AudioFilesSorter-0.1.0.jar scan D:\Music -o ./my-reports --no-open
+
+# Sort files (scan + copy to organized structure)
+java -jar target/AudioFilesSorter-0.1.0.jar sort D:\Music E:\Sorted
+java -jar target/AudioFilesSorter-0.1.0.jar sort D:\Music E:\Sorted --dry-run
+
+# Legacy entry points (still available)
+java -cp target/AudioFilesSorter-0.1.0.jar io.github.warnotte.SortMP3Directory
 ```
 
 ## Project Overview
@@ -27,39 +36,58 @@ AudioFilesSorter is a Java utility that sorts audio files (MP3, FLAC, OGG, WAV) 
 
 ## Architecture
 
-### New Architecture (io.github.warnotte.audiosorter)
+### Core Design (io.github.warnotte.audiosorter)
 
-Uses Observer pattern to decouple business logic from UI, enabling future GUI support.
+The architecture separates **scanning** from **sorting**, allowing each to be used independently:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MusicScanner (scan + metadata extraction)                  │
+│         ↓                                                   │
+│  RunTotals (DirectoryReports with metadata)                 │
+│         ↓                                                   │
+│  ┌──────┴──────┐                                            │
+│  ↓             ↓                                            │
+│ MusicSorter   ReportGenerator                               │
+│ (copy/move)   (HTML, catalog, JSON)                         │
+│                                                              │
+│ AudioSorterEngine = facade combining Scanner + Sorter       │
+└─────────────────────────────────────────────────────────────┘
+```
 
 **Packages:**
-- `core/` - Engine and configuration
-- `model/` - Data classes for reports
-- `listener/` - Progress listener interface and implementations
-- `report/` - Report generators (HTML, JSON)
-- `cli/` - Command-line entry point
+- `core/` - MusicScanner, MusicSorter, AudioSorterEngine, SortConfiguration
+- `model/` - DirectoryReport, FileReport, RunTotals
+- `listener/` - ScanProgressListener, SortProgressListener, console implementations
+- `report/` - HtmlReportGenerator, JsonReportGenerator
+- `cli/` - Picocli-based CLI with scan/sort subcommands
 
 **Key classes:**
-- `AudioSorterEngine` - Main processing engine, fires events to listeners
-- `SortConfiguration` - Externalized configuration (input/output paths, debug mode, patterns)
-- `SortProgressListener` - Interface for receiving progress events (implement for CLI, GUI, etc.)
-- `ConsoleProgressListener` - Log4j-based implementation for console output
-- `DirectoryReport` / `FileReport` / `RunTotals` - Structured result data
-- `HtmlReportGenerator` - Generates modern HTML report using Freemarker templates
-- `JsonReportGenerator` - Generates JSON report for programmatic access
+- `MusicScanner` - Scans directories and extracts metadata (no file copying)
+- `MusicSorter` - Copies/organizes files based on scan results
+- `AudioSorterEngine` - Facade combining both (for backwards compatibility)
+- `ScanProgressListener` / `SortProgressListener` - Observer interfaces
+- `HtmlReportGenerator` - Generates report.html + catalog.html using Freemarker
 
-**Usage pattern:**
+**Usage - Scan only (catalog generation):**
+```java
+MusicScanner scanner = new MusicScanner(Path.of("D:/Music"));
+scanner.addListener(new ConsoleScanListener());
+RunTotals results = scanner.scan();
+
+// Generate catalog/reports
+new HtmlReportGenerator().generate(results, config, Path.of("report.html"));
+```
+
+**Usage - Full sort (scan + copy):**
 ```java
 SortConfiguration config = new SortConfiguration(inputPath, outputPath);
 AudioSorterEngine engine = new AudioSorterEngine(config);
 engine.addListener(new ConsoleProgressListener());
 RunTotals results = engine.execute();
-
-// Generate reports
-new HtmlReportGenerator().generate(results, config, Path.of("report.html"));
-new JsonReportGenerator().generate(results, config, Path.of("report.json"));
 ```
 
-**For future GUI:** Implement `SortProgressListener` and update UI components in callback methods.
+**For future GUI:** Implement `ScanProgressListener` or `SortProgressListener` and update UI components in callback methods.
 
 ### Legacy Architecture (io.github.warnotte)
 
@@ -87,6 +115,7 @@ static boolean debugMode = false;
 - **log4j-core 2.20.0** - Logging (console + HTML files in logs/)
 - **freemarker 2.3.32** - HTML report template engine
 - **gson 2.10.1** - JSON report generation
+- **picocli 4.7.5** - CLI argument parsing with annotations
 - **Chart.js 4.4.1** (CDN) - Interactive charts in HTML report
 - **Simple-DataTables 9.0.0** (CDN) - Sortable/searchable tables in HTML report
 
@@ -171,16 +200,16 @@ Both logs/ and reports/ directories are cleaned on each run.
 
 ## TODO / Future Work
 
-- [ ] **Separate Scanner from Sorter** - Split into two independent tools:
-  - `MusicScanner` - Scans directories, extracts metadata, generates reports/catalog (no file copying)
-  - `MusicSorter` - Uses scanner data to copy/move files into organized structure
-  - Shared: metadata extraction, report generation, catalog generation
-- [ ] **GUI Implementation** - Create Swing/JavaFX GUI using `SortProgressListener` interface
+- [x] **Separate Scanner from Sorter** - Split into two independent tools (DONE)
+  - `MusicScanner` - Scans directories, extracts metadata
+  - `MusicSorter` - Copies/organizes files based on scan results
+  - `AudioSorterEngine` - Facade combining both
+- [x] **Duplicate detection** - Identify duplicate albums across the collection (DONE)
+- [x] **Picocli CLI** - Professional CLI with subcommands (scan/sort) (DONE)
+- [ ] **GUI Implementation** - Create Swing/JavaFX GUI using `ScanProgressListener` interface
 - [ ] **Export problems to CSV** - Allow exporting the Problems lists for batch processing
 - [ ] **Tag editor integration** - Quick edit for directories without tags
-- [x] **Duplicate detection** - Identify duplicate albums across the collection (DONE)
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
-- [ ] **Preview mode** - Show what would be done without actually copying
 - [ ] **Undo/rollback** - Keep track of operations for potential rollback
 - [ ] **Multi-threaded copying** - Parallel file copy for better performance
 - [ ] **Custom output pattern** - Allow configurable output folder structure (e.g., `[Genre]/[Artist]/[Year] [Album]`)
