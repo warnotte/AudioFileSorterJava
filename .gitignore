@@ -1,6 +1,23 @@
+# Build outputs
 /bin/
-/target/
+target/
+**/target/
+
+# Logs
 /logs/
+
+# IDE
 /.idea/
+*.iml
+
+# Reports (generated)
 /reports/
+
+# Maven
 dependency-reduced-pom.xml
+**/dependency-reduced-pom.xml
+
+# Eclipse
+.classpath
+.project
+.settings/

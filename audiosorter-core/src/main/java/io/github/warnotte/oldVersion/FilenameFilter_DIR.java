@@ -1,7 +1,7 @@
 /**
  * 
  */
-package io.github.warnotte;
+package io.github.warnotte.oldVersion;
 
 import java.io.File;
 import java.io.FilenameFilter;

@@ -7,9 +7,18 @@ A Java tool to analyze and organize audio files (MP3, FLAC, OGG, WAV) based on t
 - **Scan Mode**: Analyze your music collection and generate reports without modifying files
 - **Sort Mode**: Organize files into `Artist/[Year] Album` folder structure
 - **HTML Reports**: Interactive reports with charts, statistics, and data tables
-- **Music Catalog**: Visual catalog with album covers (Spotify-like dark theme)
+- **Music Catalog**: Visual catalog with album covers (Spotify-like dark theme) with audio player
 - **Duplicate Detection**: Find albums in multiple formats (MP3 + FLAC)
 - **Analysis**: Identify missing tags, suspicious years, small albums, missing cover art
+
+## Project Structure (Multi-Module Maven)
+
+```
+audiosorter/
+├── audiosorter-core/    # Core library (scanner, sorter, reports)
+├── audiosorter-cli/     # Command-line interface
+└── audiosorter-gui/     # GUI application (Swing)
+```
 
 ## Installation
 
@@ -25,42 +34,53 @@ cd AudioFileSorterJava
 mvn clean package
 ```
 
-This creates an executable JAR: `target/AudioFilesSorter-0.1.0.jar`
+This creates:
+- `audiosorter-cli/target/AudioFilesSorter-0.2.0.jar` - CLI executable JAR
+- `audiosorter-gui/target/AudioFilesSorter-GUI-0.2.0.jar` - GUI executable JAR
+
+### Build Windows Distribution (with embedded JRE)
+
+Create a standalone Windows distribution that doesn't require Java to be installed:
+
+```bash
+mvn clean package -pl audiosorter-cli -am -Pdist
+```
+
+This creates:
+- `audiosorter-cli/target/AudioFilesSorter-0.2.0-windows.zip` - Distributable ZIP (~62 MB)
+- `audiosorter-cli/target/dist/AudioFilesSorter/` - App folder with `AudioFilesSorter.exe`
 
 ## Usage
 
-### Scan (analyze without copying)
-
-Generate reports and catalog for an existing music collection:
+### CLI (with Java installed)
 
 ```bash
-java -jar AudioFilesSorter-0.1.0.jar scan D:\Music
+# Show help
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar --help
+
+# Scan a directory (generate reports/catalog without copying files)
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar scan D:\Music
+
+# Sort files (scan + copy to organized structure)
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sorted
 ```
 
-Options:
+### Windows Distribution (no Java required)
+
+Extract the ZIP and run:
+```bash
+AudioFilesSorter.exe scan D:\Music
+AudioFilesSorter.exe sort D:\Music E:\Sorted --dry-run
+```
+
+### Scan Options
 - `-o, --output <dir>` : Output directory for reports (default: ./reports)
 - `--no-open` : Don't open report in browser after generation
 
-### Sort (organize files)
-
-Scan and copy files to a new organized structure:
-
-```bash
-java -jar AudioFilesSorter-0.1.0.jar sort D:\Music E:\Sorted
-```
-
-Options:
+### Sort Options
 - `--dry-run` : Scan only, don't actually copy files
 - `-r, --reports <dir>` : Output directory for reports
 - `--no-open` : Don't open report in browser
-
-### Help
-
-```bash
-java -jar AudioFilesSorter-0.1.0.jar --help
-java -jar AudioFilesSorter-0.1.0.jar scan --help
-java -jar AudioFilesSorter-0.1.0.jar sort --help
-```
 
 ## Output Structure
 
@@ -84,7 +104,7 @@ Generated in the `reports/` directory:
 | File | Description |
 |------|-------------|
 | `report.html` | Interactive HTML report with charts and statistics |
-| `catalog.html` | Visual music catalog with album covers |
+| `catalog.html` | Visual music catalog with album covers and audio player |
 | `report.json` | Machine-readable JSON data |
 
 ### HTML Report Features
@@ -98,10 +118,12 @@ Generated in the `reports/` directory:
 
 ### Music Catalog
 
-- Dark-themed interface with album cover art
+- Dark-themed Spotify-like interface with album cover art
+- **Audio Player**: Play albums directly in the browser with track navigation
 - Artists grouped alphabetically with quick-jump navigation
-- Search/filter by artist or album name
-- Click album to open directory in file explorer
+- Search/filter by artist, album name, or track filename
+- Untagged albums section with tagging helpers
+- Playback state persists across page reload
 
 ## Supported Formats
 

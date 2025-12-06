@@ -2,32 +2,78 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Structure (Multi-Module Maven)
+
+```
+audiosorter/
+├── pom.xml                      # Parent POM (v0.2.0)
+├── audiosorter-core/            # Core library
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/.../audiosorter/
+│       │   ├── core/            # MusicScanner, MusicSorter, Engine
+│       │   ├── model/           # DirectoryReport, FileReport, RunTotals
+│       │   ├── listener/        # Progress listeners
+│       │   └── report/          # HTML, JSON generators
+│       └── resources/templates/ # Freemarker templates
+├── audiosorter-cli/             # CLI module
+│   ├── pom.xml
+│   └── src/main/java/.../cli/   # Picocli commands
+└── audiosorter-gui/             # GUI module (Swing)
+    ├── pom.xml
+    └── src/main/java/.../gui/   # MainWindow
+```
+
 ## Build Commands
 
 ```bash
-# Build the project
+# Build all modules
 mvn clean package
 
-# Compile only (no JAR)
+# Compile only
 mvn compile
+
+# Build specific module
+mvn package -pl audiosorter-cli -am
+
+# Build Windows distribution with embedded JRE (no Java required on target)
+mvn clean package -pl audiosorter-cli -am -Pdist
 ```
 
-## CLI Usage (picocli)
+### Distribution Output (with -Pdist profile)
+
+```
+audiosorter-cli/target/
+├── AudioFilesSorter-0.2.0.jar              # Fat JAR (requires Java)
+├── AudioFilesSorter-0.2.0-windows.zip      # Distributable ZIP (~62 MB)
+└── dist/AudioFilesSorter/                  # App-image folder
+    ├── AudioFilesSorter.exe                # Windows executable
+    ├── app/                                # Application JAR
+    └── runtime/                            # Embedded JRE (minimal)
+```
+
+The ZIP can be distributed to users who don't have Java installed.
+
+## CLI Usage
 
 ```bash
 # Show help
-java -jar target/AudioFilesSorter-0.1.0.jar --help
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar --help
 
 # Scan a directory (generate reports/catalog without copying files)
-java -jar target/AudioFilesSorter-0.1.0.jar scan D:\Music
-java -jar target/AudioFilesSorter-0.1.0.jar scan D:\Music -o ./my-reports --no-open
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar scan D:\Music
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar scan D:\Music -o ./my-reports --no-open
 
 # Sort files (scan + copy to organized structure)
-java -jar target/AudioFilesSorter-0.1.0.jar sort D:\Music E:\Sorted
-java -jar target/AudioFilesSorter-0.1.0.jar sort D:\Music E:\Sorted --dry-run
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sorted
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sorted --dry-run
+```
 
-# Legacy entry points (still available)
-java -cp target/AudioFilesSorter-0.1.0.jar io.github.warnotte.SortMP3Directory
+## GUI Usage
+
+```bash
+# Launch GUI
+java -jar audiosorter-gui/target/AudioFilesSorter-GUI-0.2.0.jar
 ```
 
 ## Project Overview
@@ -36,7 +82,7 @@ AudioFilesSorter is a Java utility that sorts audio files (MP3, FLAC, OGG, WAV) 
 
 ## Architecture
 
-### Core Design (io.github.warnotte.audiosorter)
+### Core Design (audiosorter-core)
 
 The architecture separates **scanning** from **sorting**, allowing each to be used independently:
 
@@ -60,7 +106,6 @@ The architecture separates **scanning** from **sorting**, allowing each to be us
 - `model/` - DirectoryReport, FileReport, RunTotals
 - `listener/` - ScanProgressListener, SortProgressListener, console implementations
 - `report/` - HtmlReportGenerator, JsonReportGenerator
-- `cli/` - Picocli-based CLI with scan/sort subcommands
 
 **Key classes:**
 - `MusicScanner` - Scans directories and extracts metadata (no file copying)
@@ -87,37 +132,19 @@ engine.addListener(new ConsoleProgressListener());
 RunTotals results = engine.execute();
 ```
 
-**For future GUI:** Implement `ScanProgressListener` or `SortProgressListener` and update UI components in callback methods.
+**For GUI:** Implement `ScanProgressListener` or `SortProgressListener` and update UI components in callback methods.
 
-### Legacy Architecture (io.github.warnotte)
+### Legacy Architecture (io.github.warnotte.oldVersion)
 
-Original monolithic implementation - still functional but tightly coupled to Log4j.
+Original monolithic implementation - kept for reference. Located in `audiosorter-core`.
 
-**Classes:**
-- `SortMP3Directory` - Main entry point with hardcoded config (lines 37-39)
-- `FilenameFilter_DIR`, `FilenameFilter_FILES`, `FilenameFilter_FILES_ALL` - File filters
-- `ExtensionLister` - Utility to list file extensions
+## Module Dependencies
 
-## Configuration
-
-**New architecture:** Pass `Path` objects to `SortConfiguration` constructor, or use CLI args.
-
-**Legacy:** Hardcoded in `SortMP3Directory.java`:
-```java
-static String inputDirectory = "e:\\manson";
-static String outputDirectory = "e:\\manson_sorted";
-static boolean debugMode = false;
-```
-
-## Dependencies
-
-- **jaudiotagger 3.0.1** - Audio file metadata reading
-- **log4j-core 2.20.0** - Logging (console + HTML files in logs/)
-- **freemarker 2.3.32** - HTML report template engine
-- **gson 2.10.1** - JSON report generation
-- **picocli 4.7.5** - CLI argument parsing with annotations
-- **Chart.js 4.4.1** (CDN) - Interactive charts in HTML report
-- **Simple-DataTables 9.0.0** (CDN) - Sortable/searchable tables in HTML report
+| Module | Dependencies |
+|--------|-------------|
+| **audiosorter-core** | jaudiotagger, freemarker, gson, log4j-core |
+| **audiosorter-cli** | audiosorter-core, picocli |
+| **audiosorter-gui** | audiosorter-core (Swing is built-in) |
 
 ## HTML Report Features
 
@@ -159,10 +186,8 @@ The HTML report (`reports/report.html`) includes:
 - Clickable path links
 
 **Templates:**
-- `src/main/resources/templates/report.ftl` - Main report template
-- `src/main/resources/templates/catalog.ftl` - Music catalog template
-- `src/main/resources/templates/partials/styles.ftl` - CSS styles
-- `src/main/resources/templates/partials/charts.ftl` - Chart.js code
+- `audiosorter-core/src/main/resources/templates/report.ftl` - Main report template
+- `audiosorter-core/src/main/resources/templates/catalog.ftl` - Music catalog template
 
 ## Music Catalog
 
@@ -180,6 +205,7 @@ A separate catalog page (`reports/catalog.html`) provides a visual music library
   - Track matches highlighted with green border and "♪ Track match" badge
 - **Format & Year filters** - Dropdown filters with active filter tags
 - **Statistics** - Artists/Albums/Tracks counts update dynamically when filtering
+- **Untagged Albums Section** - Separate section for UNKNOWN_ARTIST albums with tagging modal
 
 **Audio Player (SPA):**
 - Fixed bottom player bar with album cover, track info, controls
@@ -203,14 +229,9 @@ Reports are generated in the `reports/` directory:
 - `reports/catalog.html` - Visual music catalog with album covers
 - `reports/report.json` - Structured JSON for programmatic access
 
-## Logging
+## Git Commit Guidelines
 
-Log4j2 outputs to `logs/` directory (for development/debugging):
-- Console output
-- `logs/AudioSort.html` - Complete execution log
-- `logs/AudioSort-errors.html` - Errors/warnings only
-
-Both logs/ and reports/ directories are cleaned on each run.
+- **No AI mentions in commits**: Do not include Claude, Anthropic, or AI-related mentions in commit messages or Co-Authored-By tags.
 
 ## Known Issues & Technical Notes
 
@@ -223,21 +244,20 @@ Both logs/ and reports/ directories are cleaned on each run.
 
 **Completed:**
 - [x] **Separate Scanner from Sorter** - Split into two independent tools
-  - `MusicScanner` - Scans directories, extracts metadata
-  - `MusicSorter` - Copies/organizes files based on scan results
-  - `AudioSorterEngine` - Facade combining both
 - [x] **Duplicate detection** - Identify duplicate albums across the collection
 - [x] **Picocli CLI** - Professional CLI with subcommands (scan/sort)
 - [x] **Music Catalog SPA** - Full audio playback with track navigation
 - [x] **Track filename search** - Search finds albums containing matching track names
 - [x] **Playback persistence** - Resume playback after page reload
-
-**In Progress / Planned:**
 - [x] **Untagged albums section** - Separate section in catalog for UNKNOWN_ARTIST albums
 - [x] **Tag editor integration** - Modal with copy path, open folder, links to tagging tools
-- [ ] **GUI Implementation** - Create Swing/JavaFX GUI using `ScanProgressListener` interface
-- [ ] **Export problems to CSV** - Allow exporting the Problems lists for batch processing
+- [x] **Multi-module Maven** - Separate core, cli, gui modules
+- [x] **Windows distribution** - jpackage app-image with embedded JRE + ZIP
+
+**Planned:**
+- [ ] **GUI Implementation** - Full Swing GUI with scan progress, results display
+- [ ] **Audio fingerprinting** - AcoustID/MusicBrainz integration for auto-tagging
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
 - [ ] **Undo/rollback** - Keep track of operations for potential rollback
 - [ ] **Multi-threaded copying** - Parallel file copy for better performance
-- [ ] **Custom output pattern** - Allow configurable output folder structure (e.g., `[Genre]/[Artist]/[Year] [Album]`)
+- [ ] **Custom output pattern** - Allow configurable output folder structure

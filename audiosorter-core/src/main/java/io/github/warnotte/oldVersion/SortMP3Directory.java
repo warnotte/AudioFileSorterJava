@@ -1,4 +1,4 @@
-package io.github.warnotte;
+package io.github.warnotte.oldVersion;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
