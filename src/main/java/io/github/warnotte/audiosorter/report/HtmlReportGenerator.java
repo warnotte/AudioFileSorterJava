@@ -191,6 +191,16 @@ public class HtmlReportGenerator implements ReportGenerator {
         model.put("catalogArtistCount", catalogByArtist.size());
         model.put("catalogAlbumCount", catalogByArtist.values().stream().mapToInt(List::size).sum());
 
+        // Untagged albums - albums with UNKNOWN_ARTIST (need tagging)
+        List<Map<String, Object>> untaggedAlbums = totals.getDirectoryReports().stream()
+            .filter(r -> !r.isEmpty() && r.getFilesCount() > 0)
+            .filter(r -> r.getArtist() == null || r.getArtist().equals("UNKNOWN_ARTIST"))
+            .sorted(Comparator.comparing(r -> r.getPath().getFileName().toString().toLowerCase()))
+            .map(this::mapDirectoryReport)
+            .toList();
+        model.put("untaggedAlbums", untaggedAlbums);
+        model.put("untaggedAlbumsCount", untaggedAlbums.size());
+
         return model;
     }
 

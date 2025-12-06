@@ -518,6 +518,263 @@
             z-index: 10;
         }
 
+        /* Untagged Section */
+        .untagged-section {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 2px dashed #ff6b6b;
+        }
+
+        .untagged-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: linear-gradient(90deg, rgba(255, 107, 107, 0.1), transparent);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .untagged-header:hover {
+            background: linear-gradient(90deg, rgba(255, 107, 107, 0.15), transparent);
+        }
+
+        .untagged-icon {
+            font-size: 2rem;
+            color: #ff6b6b;
+        }
+
+        .untagged-title {
+            flex: 1;
+        }
+
+        .untagged-title h2 {
+            font-size: 1.5rem;
+            color: #ff6b6b;
+            margin: 0;
+        }
+
+        .untagged-title p {
+            color: var(--color-text-secondary);
+            font-size: 0.85rem;
+            margin: 0.25rem 0 0 0;
+        }
+
+        .untagged-count {
+            background: #ff6b6b;
+            color: #000;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .untagged-toggle {
+            color: var(--color-text-secondary);
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .untagged-header.collapsed .untagged-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .untagged-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
+            transition: opacity 0.3s, max-height 0.3s;
+        }
+
+        .untagged-content.collapsed {
+            display: none;
+        }
+
+        .untagged-card {
+            background: linear-gradient(135deg, #2a1a1a 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .untagged-card:hover {
+            border-color: #ff6b6b;
+            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.2);
+        }
+
+        .untagged-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #ff6b6b;
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        .tag-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 107, 107, 0.9);
+            color: #000;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s;
+            z-index: 10;
+        }
+
+        .album-card:hover .tag-btn {
+            opacity: 1;
+        }
+
+        .tag-btn:hover {
+            background: #ff6b6b;
+        }
+
+        /* Tagging Modal */
+        .tag-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .tag-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tag-modal {
+            background: #1e1e1e;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            padding: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .tag-modal-overlay.visible .tag-modal {
+            transform: scale(1);
+        }
+
+        .tag-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tag-modal-icon {
+            font-size: 2rem;
+            color: #ff6b6b;
+        }
+
+        .tag-modal-header h3 {
+            margin: 0;
+            color: #ff6b6b;
+        }
+
+        .tag-modal-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .tag-modal-close:hover {
+            color: var(--color-text);
+        }
+
+        .tag-modal-path {
+            background: #0d0d0d;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 1rem;
+            word-break: break-all;
+        }
+
+        .tag-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tag-modal-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #282828;
+            border: none;
+            border-radius: 6px;
+            color: var(--color-text);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .tag-modal-btn:hover {
+            background: #333;
+        }
+
+        .tag-modal-btn .icon {
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
+
+        .tag-modal-btn.primary {
+            background: #ff6b6b;
+            color: #000;
+        }
+
+        .tag-modal-btn.primary:hover {
+            background: #ff8585;
+        }
+
+        .tag-modal-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-border);
+            font-size: 0.8rem;
+            color: var(--color-text-secondary);
+        }
+
+        .tag-modal-footer a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        .tag-modal-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .copy-success {
+            color: var(--color-accent) !important;
+        }
+
         /* Player Bar */
         .player-bar {
             position: fixed;
@@ -860,6 +1117,89 @@
         </div>
     </div>
     </#list>
+
+    <#-- Untagged Albums Section -->
+    <#if untaggedAlbums?? && (untaggedAlbums?size > 0)>
+    <div class="untagged-section" id="untaggedSection">
+        <div class="untagged-header" onclick="toggleUntagged()">
+            <span class="untagged-icon">&#9888;</span>
+            <div class="untagged-title">
+                <h2>Albums Without Tags</h2>
+                <p>These albums have missing ID3 tags and need attention</p>
+            </div>
+            <span class="untagged-count">${untaggedAlbumsCount?c}</span>
+            <span class="untagged-toggle" id="untaggedToggle">&#9660;</span>
+        </div>
+        <div class="untagged-content" id="untaggedContent">
+            <#list untaggedAlbums as album>
+            <div class="album-card untagged-card"
+                 data-artist="${(album.artist!'')?js_string}"
+                 data-album="${(album.album!'')?js_string}"
+                 data-album-lower="${(album.album!'')?lower_case?js_string}"
+                 data-year="${album.year!'Unknown'}"
+                 data-format="${album.format!''}"
+                 data-path="${album.path?js_string}"
+                 data-cover="${(album.coverImagePath!'')?js_string}"
+                 data-audio="${(album.firstAudioFilePath!'')?js_string}"
+                 data-tracks="<#if album.audioFilePaths??><#list album.audioFilePaths as track>${track?js_string}<#if track_has_next>|</#if></#list></#if>"
+                 data-track-names="<#if album.audioFilePaths??><#list album.audioFilePaths as track>${track?replace('\\', '/')?keep_after_last("/")?keep_before_last(".")?lower_case?js_string}<#if track_has_next>|</#if></#list></#if>"
+                 data-track-count="${album.filesCount?c}"
+                 onclick="playAlbum(this)">
+                <span class="untagged-badge">NO TAGS</span>
+                <button class="tag-btn" onclick="event.stopPropagation(); openForTagging('${album.path?js_string}')">&#9998; Tag</button>
+                <div class="album-cover">
+                    <#if album.coverImagePath?? && album.coverImagePath != "">
+                    <img src="file:///${album.coverImagePath?replace('\\', '/')}" alt="" onerror="this.parentElement.innerHTML='<span class=\'no-cover\'>&#127925;</span>'">
+                    <#else>
+                    <span class="no-cover">&#127925;</span>
+                    </#if>
+                    <div class="play-overlay">
+                        <div class="play-btn">&#9654;</div>
+                    </div>
+                </div>
+                <div class="album-info">
+                    <div class="album-title" title="${album.path?keep_after_last('\\')}">${album.path?keep_after_last('\\')}</div>
+                    <div class="album-artist" style="color: #ff6b6b;">Unknown Artist</div>
+                    <div class="album-year">${album.year!'Unknown'}</div>
+                    <div class="album-meta">
+                        <#if album.format??><span class="album-tag">${album.format}</span></#if>
+                        <#if album.bitrate??><span class="album-tag">${album.bitrate?c} kbps</span></#if>
+                        <span class="album-tag">${album.filesCount?c} tracks</span>
+                    </div>
+                </div>
+            </div>
+            </#list>
+        </div>
+    </div>
+    </#if>
+</div>
+
+<!-- Tagging Modal -->
+<div class="tag-modal-overlay" id="tagModal" onclick="closeTagModal(event)">
+    <div class="tag-modal" onclick="event.stopPropagation()">
+        <div class="tag-modal-header">
+            <span class="tag-modal-icon">&#9998;</span>
+            <h3>Tag This Album</h3>
+            <button class="tag-modal-close" onclick="closeTagModal()">&times;</button>
+        </div>
+        <div class="tag-modal-path" id="tagModalPath"></div>
+        <div class="tag-modal-actions">
+            <button class="tag-modal-btn primary" onclick="copyPathToClipboard()">
+                <span class="icon">&#128203;</span>
+                <span id="copyBtnText">Copy path to clipboard</span>
+            </button>
+            <button class="tag-modal-btn" onclick="openFolderFromModal()">
+                <span class="icon">&#128193;</span>
+                <span>Open folder in Explorer</span>
+            </button>
+        </div>
+        <div class="tag-modal-footer">
+            <strong>Recommended tagging tools:</strong><br>
+            <a href="https://www.mp3tag.de/" target="_blank">Mp3tag</a> (Windows) |
+            <a href="https://picard.musicbrainz.org/" target="_blank">MusicBrainz Picard</a> (Cross-platform) |
+            <a href="https://www.foobar2000.org/" target="_blank">foobar2000</a> (Windows)
+        </div>
+    </div>
 </div>
 
 <!-- Audio Player Bar -->
@@ -1346,6 +1686,72 @@ function formatTime(seconds) {
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// Untagged section toggle
+function toggleUntagged() {
+    const header = document.querySelector('.untagged-header');
+    const content = document.getElementById('untaggedContent');
+    header.classList.toggle('collapsed');
+    content.classList.toggle('collapsed');
+}
+
+// Current path being tagged
+let currentTagPath = '';
+
+// Open tagging modal
+function openForTagging(path) {
+    currentTagPath = path;
+    document.getElementById('tagModalPath').textContent = path;
+    document.getElementById('tagModal').classList.add('visible');
+    document.getElementById('copyBtnText').textContent = 'Copy path to clipboard';
+}
+
+// Close tagging modal
+function closeTagModal(event) {
+    if (event && event.target !== document.getElementById('tagModal')) return;
+    document.getElementById('tagModal').classList.remove('visible');
+}
+
+// Escape key to close modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeTagModal();
+    }
+});
+
+// Copy path to clipboard
+function copyPathToClipboard() {
+    navigator.clipboard.writeText(currentTagPath).then(() => {
+        const btn = document.getElementById('copyBtnText');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copy-success');
+        setTimeout(() => {
+            btn.textContent = 'Copy path to clipboard';
+            btn.classList.remove('copy-success');
+        }, 2000);
+    }).catch(err => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = currentTagPath;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        const btn = document.getElementById('copyBtnText');
+        btn.textContent = 'Copied!';
+        btn.classList.add('copy-success');
+        setTimeout(() => {
+            btn.textContent = 'Copy path to clipboard';
+            btn.classList.remove('copy-success');
+        }, 2000);
+    });
+}
+
+// Open folder from modal
+function openFolderFromModal() {
+    window.open('file:///' + currentTagPath.replace(/\\/g, '/'), '_blank');
 }
 </script>
 

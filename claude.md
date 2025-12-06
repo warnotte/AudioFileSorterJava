@@ -233,8 +233,8 @@ Both logs/ and reports/ directories are cleaned on each run.
 - [x] **Playback persistence** - Resume playback after page reload
 
 **In Progress / Planned:**
-- [ ] **Untagged albums section** - Separate section in catalog for UNKNOWN_ARTIST albums
-- [ ] **Tag editor integration** - Edit ID3 tags directly from the catalog
+- [x] **Untagged albums section** - Separate section in catalog for UNKNOWN_ARTIST albums
+- [x] **Tag editor integration** - Modal with copy path, open folder, links to tagging tools
 - [ ] **GUI Implementation** - Create Swing/JavaFX GUI using `ScanProgressListener` interface
 - [ ] **Export problems to CSV** - Allow exporting the Problems lists for batch processing
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
