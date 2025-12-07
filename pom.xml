@@ -15,6 +15,7 @@
         <module>audiosorter-core</module>
         <module>audiosorter-cli</module>
         <module>audiosorter-gui</module>
+        <module>audiosorter-coverart</module>
     </modules>
 
     <properties>
