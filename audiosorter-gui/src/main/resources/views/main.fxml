@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="io.github.warnotte.audiosorter.gui.MainController"
+            styleClass="root-pane">
+
+    <!-- Header -->
+    <top>
+        <VBox styleClass="header" spacing="5">
+            <padding><Insets top="15" right="20" bottom="15" left="20"/></padding>
+            <Label text="AudioFilesSorter" styleClass="title"/>
+            <Label text="Scan and organize your music collection" styleClass="subtitle"/>
+        </VBox>
+    </top>
+
+    <!-- Main content -->
+    <center>
+        <VBox spacing="20">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+            <!-- Mode selection -->
+            <HBox spacing="15" alignment="CENTER_LEFT">
+                <Label text="Mode:" styleClass="label-bold"/>
+                <RadioButton fx:id="scanModeRadio" text="Scan only (generate reports)" selected="true">
+                    <toggleGroup><ToggleGroup fx:id="modeGroup"/></toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="sortModeRadio" text="Sort (scan + copy files)">
+                    <toggleGroup><fx:reference source="modeGroup"/></toggleGroup>
+                </RadioButton>
+            </HBox>
+
+            <!-- Source folder -->
+            <VBox spacing="5">
+                <Label text="Source folder:" styleClass="label-bold"/>
+                <HBox spacing="10">
+                    <TextField fx:id="sourceFolderField" promptText="Select music folder to scan..." HBox.hgrow="ALWAYS"/>
+                    <Button text="Browse..." onAction="#browseSourceFolder" styleClass="browse-button"/>
+                </HBox>
+            </VBox>
+
+            <!-- Destination folder (only for sort mode) -->
+            <VBox fx:id="destFolderBox" spacing="5" managed="false" visible="false">
+                <Label text="Destination folder:" styleClass="label-bold"/>
+                <HBox spacing="10">
+                    <TextField fx:id="destFolderField" promptText="Select destination for sorted files..." HBox.hgrow="ALWAYS"/>
+                    <Button text="Browse..." onAction="#browseDestFolder" styleClass="browse-button"/>
+                </HBox>
+            </VBox>
+
+            <!-- Options -->
+            <HBox spacing="20" alignment="CENTER_LEFT">
+                <CheckBox fx:id="openReportCheckbox" text="Open report when done" selected="true"/>
+            </HBox>
+
+            <!-- Action buttons -->
+            <HBox spacing="15" alignment="CENTER">
+                <Button fx:id="startButton" text="Start Scan" onAction="#startOperation" styleClass="primary-button" prefWidth="150"/>
+                <Button fx:id="cancelButton" text="Cancel" onAction="#cancelOperation" styleClass="cancel-button" prefWidth="100" disable="true"/>
+            </HBox>
+
+            <!-- Progress section -->
+            <VBox fx:id="progressBox" spacing="10" styleClass="progress-section">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label fx:id="progressLabel" text="Ready"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="progressPercent" text=""/>
+                </HBox>
+                <ProgressBar fx:id="progressBar" progress="0" maxWidth="Infinity"/>
+                <Label fx:id="currentItemLabel" text="" styleClass="current-item"/>
+            </VBox>
+
+            <!-- Statistics -->
+            <TitledPane fx:id="statsPane" text="Statistics" expanded="false" styleClass="stats-pane">
+                <GridPane hgap="20" vgap="8">
+                    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <Label text="Directories scanned:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <Label fx:id="statsDirsScanned" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="stat-value"/>
+                    <Label text="Audio files found:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                    <Label fx:id="statsAudioFiles" text="0" GridPane.columnIndex="3" GridPane.rowIndex="0" styleClass="stat-value"/>
+
+                    <Label text="OK:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <Label fx:id="statsDirsOk" text="0" styleClass="stat-ok" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label text="Missing tags:" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                    <Label fx:id="statsMissingTags" text="0" styleClass="stat-warning" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+
+                    <Label text="Errors:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <Label fx:id="statsErrors" text="0" styleClass="stat-error" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Label text="Duplicates:" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+                    <Label fx:id="statsDuplicates" text="0" styleClass="stat-warning" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+                </GridPane>
+            </TitledPane>
+
+            <!-- Log area -->
+            <VBox VBox.vgrow="ALWAYS" spacing="5">
+                <Label text="Log:" styleClass="label-bold"/>
+                <TextArea fx:id="logArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" styleClass="log-area"/>
+            </VBox>
+
+        </VBox>
+    </center>
+
+    <!-- Footer -->
+    <bottom>
+        <HBox styleClass="footer" alignment="CENTER_RIGHT" spacing="10">
+            <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+            <Button text="Open Reports Folder" onAction="#openReportsFolder" styleClass="link-button"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="v0.2.0" styleClass="version"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

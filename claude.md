@@ -19,9 +19,12 @@ audiosorter/
 ├── audiosorter-cli/             # CLI module
 │   ├── pom.xml
 │   └── src/main/java/.../cli/   # Picocli commands
-└── audiosorter-gui/             # GUI module (Swing)
+└── audiosorter-gui/             # GUI module (JavaFX)
     ├── pom.xml
-    └── src/main/java/.../gui/   # MainWindow
+    └── src/main/java/.../gui/   # App, MainController
+        └── resources/
+            ├── views/main.fxml  # FXML layout
+            └── styles/dark-theme.css
 ```
 
 ## Build Commands
@@ -163,7 +166,7 @@ Original monolithic implementation - kept for reference. Located in `audiosorter
 |--------|-------------|
 | **audiosorter-core** | jaudiotagger, freemarker, gson, log4j-core |
 | **audiosorter-cli** | audiosorter-core, picocli |
-| **audiosorter-gui** | audiosorter-core (Swing is built-in) |
+| **audiosorter-gui** | audiosorter-core, javafx-controls, javafx-fxml |
 
 ## HTML Report Features
 
@@ -275,8 +278,10 @@ Reports are generated in the `reports/` directory:
 - [x] **Minimal JRE with jlink** - Custom JRE with only required modules (~37 MB ZIP vs ~62 MB)
 - [x] **GraalVM native-image** - Native executable build script (~60 MB, ~20 MB with UPX)
 
+- [x] **JavaFX GUI** - Dark-themed GUI with scan/sort modes, progress bar, cancel support
+
 **Planned:**
-- [ ] **GUI Implementation** - Full Swing GUI with scan progress, results display
+- [ ] **Normalize date format** - Some albums show `[2006]` while others show `[2016-10-06]` (YYYY-MM-DD). Should extract only the year from full dates for consistent display.
 - [ ] **Audio fingerprinting** - AcoustID/MusicBrainz integration for auto-tagging
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
 - [ ] **Undo/rollback** - Keep track of operations for potential rollback

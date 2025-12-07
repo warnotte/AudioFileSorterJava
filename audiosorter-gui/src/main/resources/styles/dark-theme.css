@@ -1,0 +1,283 @@
+/* Dark theme - Spotify-like */
+
+.root-pane {
+    -fx-background-color: #121212;
+}
+
+/* Header */
+.header {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: #282828;
+    -fx-border-width: 0 0 1 0;
+}
+
+.title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1db954;
+}
+
+.subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #b3b3b3;
+}
+
+/* Labels */
+.label {
+    -fx-text-fill: #ffffff;
+}
+
+.label-bold {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+}
+
+/* Text fields */
+.text-field {
+    -fx-background-color: #282828;
+    -fx-text-fill: #ffffff;
+    -fx-prompt-text-fill: #727272;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-border-color: #404040;
+    -fx-border-width: 1;
+    -fx-padding: 8;
+}
+
+.text-field:focused {
+    -fx-border-color: #1db954;
+}
+
+/* Buttons */
+.button {
+    -fx-background-color: #282828;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 20;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #3e3e3e;
+}
+
+.browse-button {
+    -fx-background-color: #404040;
+    -fx-background-radius: 4;
+}
+
+.browse-button:hover {
+    -fx-background-color: #505050;
+}
+
+.primary-button {
+    -fx-background-color: #1db954;
+    -fx-text-fill: #000000;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #1ed760;
+}
+
+.primary-button:disabled {
+    -fx-background-color: #535353;
+    -fx-text-fill: #727272;
+}
+
+.cancel-button {
+    -fx-background-color: #b91d1d;
+    -fx-text-fill: #ffffff;
+}
+
+.cancel-button:hover {
+    -fx-background-color: #d72020;
+}
+
+.cancel-button:disabled {
+    -fx-background-color: #535353;
+    -fx-text-fill: #727272;
+}
+
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #1db954;
+    -fx-underline: true;
+    -fx-padding: 4 8;
+}
+
+.link-button:hover {
+    -fx-text-fill: #1ed760;
+}
+
+/* Radio buttons */
+.radio-button {
+    -fx-text-fill: #ffffff;
+}
+
+.radio-button .radio {
+    -fx-background-color: #282828;
+    -fx-border-color: #404040;
+}
+
+.radio-button:selected .radio {
+    -fx-background-color: #1db954;
+    -fx-border-color: #1db954;
+}
+
+.radio-button .dot {
+    -fx-background-color: #000000;
+}
+
+/* Checkboxes */
+.check-box {
+    -fx-text-fill: #ffffff;
+}
+
+.check-box .box {
+    -fx-background-color: #282828;
+    -fx-border-color: #404040;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:selected .box {
+    -fx-background-color: #1db954;
+    -fx-border-color: #1db954;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #000000;
+}
+
+/* Progress section */
+.progress-section {
+    -fx-background-color: #1a1a1a;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+}
+
+.progress-bar {
+    -fx-accent: #1db954;
+    -fx-background-color: #282828;
+    -fx-background-radius: 4;
+}
+
+.progress-bar .track {
+    -fx-background-color: #282828;
+    -fx-background-radius: 4;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #1db954;
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+}
+
+.current-item {
+    -fx-text-fill: #727272;
+    -fx-font-size: 11px;
+}
+
+/* Statistics pane */
+.stats-pane {
+    -fx-text-fill: #ffffff;
+}
+
+.stats-pane > .title {
+    -fx-background-color: #1a1a1a;
+    -fx-text-fill: #ffffff;
+}
+
+.stats-pane > .content {
+    -fx-background-color: #1a1a1a;
+}
+
+.stat-value {
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.stat-ok {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1db954;
+}
+
+.stat-warning {
+    -fx-font-weight: bold;
+    -fx-text-fill: #f0ad4e;
+}
+
+.stat-error {
+    -fx-font-weight: bold;
+    -fx-text-fill: #d9534f;
+}
+
+/* Log area */
+.log-area {
+    -fx-background-color: #0a0a0a;
+    -fx-text-fill: #b3b3b3;
+    -fx-font-family: "Consolas", "Monaco", monospace;
+    -fx-font-size: 12px;
+}
+
+.log-area .content {
+    -fx-background-color: #0a0a0a;
+}
+
+/* TitledPane styling */
+.titled-pane {
+    -fx-text-fill: #ffffff;
+}
+
+.titled-pane > .title {
+    -fx-background-color: #282828;
+    -fx-background-radius: 4 4 0 0;
+}
+
+.titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: #ffffff;
+}
+
+.titled-pane > .content {
+    -fx-background-color: #1a1a1a;
+    -fx-border-color: #282828;
+    -fx-border-width: 0 1 1 1;
+}
+
+/* Footer */
+.footer {
+    -fx-background-color: #0a0a0a;
+    -fx-border-color: #282828;
+    -fx-border-width: 1 0 0 0;
+}
+
+.version {
+    -fx-text-fill: #535353;
+    -fx-font-size: 11px;
+}
+
+/* Scrollbars */
+.scroll-bar {
+    -fx-background-color: #1a1a1a;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #404040;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #535353;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-background-color: #535353;
+}
