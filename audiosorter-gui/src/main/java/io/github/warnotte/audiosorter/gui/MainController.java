@@ -5,6 +5,8 @@ import io.github.warnotte.audiosorter.core.MusicScanner;
 import io.github.warnotte.audiosorter.core.MusicSorter;
 import io.github.warnotte.audiosorter.core.SortConfiguration;
 import io.github.warnotte.audiosorter.coverart.CoverArtExtractor;
+import io.github.warnotte.audiosorter.coverart.CoverArtReport;
+import io.github.warnotte.audiosorter.coverart.CoverArtReportGenerator;
 import io.github.warnotte.audiosorter.coverart.MusicBrainzFetcher;
 import io.github.warnotte.audiosorter.listener.ScanProgressListener;
 import io.github.warnotte.audiosorter.listener.SortProgressListener;
@@ -304,16 +306,14 @@ public class MainController {
 
     private void startCoverArtExtraction(Path sourcePath) {
         boolean useOnline = onlineSearchCheckbox.isSelected();
+        reportsPath = Path.of("reports");
 
-        Task<CoverArtResult> task = new Task<>() {
+        Task<CoverArtReport> task = new Task<>() {
             @Override
-            protected CoverArtResult call() throws Exception {
+            protected CoverArtReport call() throws Exception {
                 CoverArtExtractor extractor = new CoverArtExtractor();
                 MusicBrainzFetcher fetcher = useOnline ? new MusicBrainzFetcher() : null;
-
-                List<CoverArtExtractor.ExtractedCover> onlineCovers = new ArrayList<>();
-                List<String> missingCovers = new ArrayList<>();
-                int fetchedOnline = 0;
+                CoverArtReport report = new CoverArtReport(sourcePath);
 
                 Platform.runLater(() -> {
                     progressLabel.setText("Finding directories...");
@@ -329,6 +329,7 @@ public class MainController {
                 }
 
                 int totalDirs = directories.size();
+                report.setTotalDirectories(totalDirs);
                 Platform.runLater(() -> {
                     log("Found " + totalDirs + " directories with audio files");
                     progressLabel.setText("Phase 1: Extracting from tags...");
@@ -356,9 +357,18 @@ public class MainController {
                     });
 
                     CoverArtExtractor.ExtractionResult result = extractor.extractCover(dir);
+                    CoverArtExtractor.AlbumInfo info = extractor.getAlbumInfo(dir);
+
                     switch (result) {
                         case EXTRACTED:
                             log("[OK] " + relativePath + " -> cover extracted from tags");
+                            // Find the cover file that was just extracted
+                            Path coverFile = findCoverFile(dir);
+                            if (coverFile != null) {
+                                long size = Files.size(coverFile);
+                                report.addExtractedFromTags(new CoverArtReport.CoverResult(
+                                    coverFile, dir, info.artist, info.album, size, "tags"));
+                            }
                             break;
                         case ALREADY_EXISTS:
                             // Silent
@@ -371,6 +381,8 @@ public class MainController {
                             break;
                     }
                 }
+
+                report.setAlreadyHadCover(extractor.getSkippedAlreadyExists());
 
                 // Phase 2: Online fetch if enabled
                 if (useOnline && !dirsWithoutCover.isEmpty() && !isCancelled()) {
@@ -401,7 +413,7 @@ public class MainController {
                         CoverArtExtractor.AlbumInfo info = extractor.getAlbumInfo(dir);
                         if (!info.isValid()) {
                             log("[SKIP] " + relativePath + " -> no artist/album tags");
-                            missingCovers.add(relativePath + " (no tags)");
+                            report.addMissingCover(new CoverArtReport.MissingCover(dir, null, null, "no_tags"));
                             continue;
                         }
 
@@ -411,11 +423,11 @@ public class MainController {
                         if (cover.isPresent()) {
                             long size = Files.size(cover.get());
                             log("[OK] " + relativePath + " -> downloaded from MusicBrainz (" + formatSize(size) + ")");
-                            fetchedOnline++;
-                            onlineCovers.add(new CoverArtExtractor.ExtractedCover(cover.get(), size, ".jpg"));
+                            report.addDownloadedOnline(new CoverArtReport.CoverResult(
+                                cover.get(), dir, info.artist, info.album, size, "musicbrainz"));
                         } else {
                             log("[MISS] " + relativePath + " -> not found on MusicBrainz");
-                            missingCovers.add(relativePath + " (" + info.artist + " - " + info.album + ")");
+                            report.addMissingCover(new CoverArtReport.MissingCover(dir, info.artist, info.album, "not_found"));
                         }
                     }
                 } else if (!dirsWithoutCover.isEmpty()) {
@@ -423,31 +435,48 @@ public class MainController {
                         String relativePath = sourcePath.relativize(dir).toString();
                         if (relativePath.isEmpty()) relativePath = ".";
                         log("[SKIP] " + relativePath + " -> no embedded cover");
-                        missingCovers.add(relativePath);
+                        CoverArtExtractor.AlbumInfo info = extractor.getAlbumInfo(dir);
+                        report.addMissingCover(new CoverArtReport.MissingCover(
+                            dir, info.artist, info.album, "no_embedded"));
                     }
                 }
 
-                return new CoverArtResult(extractor, fetchedOnline, onlineCovers, missingCovers, totalDirs);
+                return report;
             }
 
             @Override
             protected void succeeded() {
-                CoverArtResult result = getValue();
-                int totalExtracted = result.extractor.getExtracted() + result.fetchedOnline;
+                CoverArtReport report = getValue();
+                int totalExtracted = report.getTotalExtracted();
 
                 log("");
                 log("=== Results ===");
-                log("Directories scanned:    " + result.totalDirs);
-                log("Already had cover:      " + result.extractor.getSkippedAlreadyExists());
-                log("Extracted from tags:    " + result.extractor.getExtracted());
+                log("Directories scanned:    " + report.getTotalDirectories());
+                log("Already had cover:      " + report.getAlreadyHadCover());
+                log("Extracted from tags:    " + report.getExtractedFromTags().size());
                 if (useOnline) {
-                    log("Downloaded online:      " + result.fetchedOnline);
+                    log("Downloaded online:      " + report.getDownloadedOnline().size());
                 }
-                log("Still missing:          " + result.missingCovers.size());
+                log("Still missing:          " + report.getMissingCovers().size());
+
+                // Generate HTML report
+                try {
+                    Files.createDirectories(reportsPath);
+                    Path reportPath = reportsPath.resolve("coverart-report.html");
+                    new CoverArtReportGenerator().generate(report, reportPath);
+                    log("Report generated: " + reportPath.toAbsolutePath());
+
+                    // Open report in browser
+                    if (totalExtracted > 0 || !report.getMissingCovers().isEmpty()) {
+                        Desktop.getDesktop().open(reportPath.toFile());
+                    }
+                } catch (IOException e) {
+                    log("ERROR generating report: " + e.getMessage());
+                }
 
                 if (totalExtracted > 0) {
-                    onOperationComplete("SUCCESS: Got " + totalExtracted + " cover(s)!");
-                } else if (!result.missingCovers.isEmpty() && !useOnline) {
+                    onOperationComplete("SUCCESS: Got " + totalExtracted + " cover(s)! Report opened.");
+                } else if (!report.getMissingCovers().isEmpty() && !useOnline) {
                     onOperationComplete("Done. Use 'Search MusicBrainz' option for missing covers.");
                 } else {
                     onOperationComplete("Done. All directories already have cover images.");
@@ -455,9 +484,9 @@ public class MainController {
 
                 // Update stats display
                 Platform.runLater(() -> {
-                    statsDirsOk.setText(String.valueOf(result.extractor.getSkippedAlreadyExists()));
-                    statsAudioFiles.setText(String.valueOf(result.extractor.getExtracted() + result.fetchedOnline));
-                    statsMissingTags.setText(String.valueOf(result.missingCovers.size()));
+                    statsDirsOk.setText(String.valueOf(report.getAlreadyHadCover()));
+                    statsAudioFiles.setText(String.valueOf(totalExtracted));
+                    statsMissingTags.setText(String.valueOf(report.getMissingCovers().size()));
                 });
             }
 
@@ -478,6 +507,17 @@ public class MainController {
         new Thread(task).start();
     }
 
+    private Path findCoverFile(Path dir) {
+        String[] coverNames = {"cover.jpg", "cover.png", "cover.gif", "cover.bmp"};
+        for (String name : coverNames) {
+            Path coverPath = dir.resolve(name);
+            if (Files.exists(coverPath)) {
+                return coverPath;
+            }
+        }
+        return null;
+    }
+
     private boolean hasAudioFiles(Path dir) {
         try (Stream<Path> files = Files.list(dir)) {
             return files.anyMatch(f -> {
@@ -495,24 +535,6 @@ public class MainController {
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
         return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
-    }
-
-    private static class CoverArtResult {
-        final CoverArtExtractor extractor;
-        final int fetchedOnline;
-        final List<CoverArtExtractor.ExtractedCover> onlineCovers;
-        final List<String> missingCovers;
-        final int totalDirs;
-
-        CoverArtResult(CoverArtExtractor extractor, int fetchedOnline,
-                       List<CoverArtExtractor.ExtractedCover> onlineCovers,
-                       List<String> missingCovers, int totalDirs) {
-            this.extractor = extractor;
-            this.fetchedOnline = fetchedOnline;
-            this.onlineCovers = onlineCovers;
-            this.missingCovers = missingCovers;
-            this.totalDirs = totalDirs;
-        }
     }
 
     private void generateReports(RunTotals totals, Path sourcePath, Path destPath) {

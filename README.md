@@ -6,6 +6,7 @@ A Java tool to analyze and organize audio files (MP3, FLAC, OGG, WAV) based on t
 
 - **Scan Mode**: Analyze your music collection and generate reports without modifying files
 - **Sort Mode**: Organize files into `Artist/[Year] Album` folder structure
+- **Cover Art Mode**: Extract missing album covers from embedded tags or MusicBrainz
 - **HTML Reports**: Interactive reports with charts, statistics, and data tables
 - **Music Catalog**: Visual catalog with album covers (Spotify-like dark theme) with audio player
 - **Duplicate Detection**: Find albums in multiple formats (MP3 + FLAC)
@@ -15,9 +16,10 @@ A Java tool to analyze and organize audio files (MP3, FLAC, OGG, WAV) based on t
 
 ```
 audiosorter/
-├── audiosorter-core/    # Core library (scanner, sorter, reports)
-├── audiosorter-cli/     # Command-line interface
-└── audiosorter-gui/     # GUI application (JavaFX with AtlantaFX themes)
+├── audiosorter-core/      # Core library (scanner, sorter, reports)
+├── audiosorter-cli/       # Command-line interface
+├── audiosorter-gui/       # GUI application (JavaFX with AtlantaFX themes)
+└── audiosorter-coverart/  # Cover art extraction module
 ```
 
 ## Installation
@@ -85,6 +87,10 @@ java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar scan D:\Music
 
 # Sort files (scan + copy to organized structure)
 java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sorted
+
+# Extract missing cover art
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar coverart D:\Music
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar coverart D:\Music --online
 ```
 
 ### Windows Distribution (no Java required)
@@ -103,6 +109,9 @@ AudioFilesSorter.exe sort D:\Music E:\Sorted --dry-run
 - `--dry-run` : Scan only, don't actually copy files
 - `-r, --reports <dir>` : Output directory for reports
 - `--no-open` : Don't open report in browser
+
+### Cover Art Options
+- `-o, --online` : Search MusicBrainz for covers not found in embedded tags (rate limited 1 req/sec)
 
 ## Output Structure
 
@@ -128,6 +137,7 @@ Generated in the `reports/` directory:
 | `report.html` | Interactive HTML report with charts and statistics |
 | `catalog.html` | Visual music catalog with album covers and audio player |
 | `report.json` | Machine-readable JSON data |
+| `coverart-report.html` | Cover art extraction results with thumbnails (Cover Art mode) |
 
 ### HTML Report Features
 

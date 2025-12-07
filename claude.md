@@ -24,12 +24,14 @@ audiosorter/
 │   └── src/main/java/.../gui/   # App, Launcher, MainController
 │       └── resources/
 │           └── views/main.fxml  # FXML layout
-└── audiosorter-coverart/        # Cover art extraction module (experimental)
+└── audiosorter-coverart/        # Cover art extraction module
     ├── pom.xml
     └── src/main/java/.../coverart/
-        ├── CoverArtExtractor.java   # Extract from embedded tags
-        ├── CoverArtMain.java        # Standalone CLI
-        └── MusicBrainzFetcher.java  # Fetch from Cover Art Archive
+        ├── CoverArtExtractor.java       # Extract from embedded tags
+        ├── CoverArtMain.java            # Standalone CLI
+        ├── CoverArtReport.java          # Report model (results, statistics)
+        ├── CoverArtReportGenerator.java # HTML report generator
+        └── MusicBrainzFetcher.java      # Fetch from Cover Art Archive
 ```
 
 ## Build Commands
