@@ -31,6 +31,9 @@
                 <RadioButton fx:id="sortModeRadio" text="Sort (scan + copy files)">
                     <toggleGroup><fx:reference source="modeGroup"/></toggleGroup>
                 </RadioButton>
+                <RadioButton fx:id="coverArtModeRadio" text="Cover Art (extract missing covers)">
+                    <toggleGroup><fx:reference source="modeGroup"/></toggleGroup>
+                </RadioButton>
             </HBox>
 
             <!-- Source folder -->
@@ -54,6 +57,7 @@
             <!-- Options -->
             <HBox spacing="20" alignment="CENTER_LEFT">
                 <CheckBox fx:id="openReportCheckbox" text="Open report when done" selected="true"/>
+                <CheckBox fx:id="onlineSearchCheckbox" text="Search MusicBrainz for missing covers" managed="false" visible="false"/>
             </HBox>
 
             <!-- Action buttons -->

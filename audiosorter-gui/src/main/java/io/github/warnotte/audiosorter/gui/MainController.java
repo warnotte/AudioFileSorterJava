@@ -4,6 +4,8 @@ import atlantafx.base.theme.*;
 import io.github.warnotte.audiosorter.core.MusicScanner;
 import io.github.warnotte.audiosorter.core.MusicSorter;
 import io.github.warnotte.audiosorter.core.SortConfiguration;
+import io.github.warnotte.audiosorter.coverart.CoverArtExtractor;
+import io.github.warnotte.audiosorter.coverart.MusicBrainzFetcher;
 import io.github.warnotte.audiosorter.listener.ScanProgressListener;
 import io.github.warnotte.audiosorter.listener.SortProgressListener;
 import io.github.warnotte.audiosorter.model.DirectoryReport;
@@ -22,11 +24,17 @@ import javafx.stage.Stage;
 
 import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Main controller for the AudioFilesSorter GUI.
@@ -35,10 +43,12 @@ public class MainController {
 
     @FXML private RadioButton scanModeRadio;
     @FXML private RadioButton sortModeRadio;
+    @FXML private RadioButton coverArtModeRadio;
     @FXML private TextField sourceFolderField;
     @FXML private TextField destFolderField;
     @FXML private VBox destFolderBox;
     @FXML private CheckBox openReportCheckbox;
+    @FXML private CheckBox onlineSearchCheckbox;
     @FXML private Button startButton;
     @FXML private Button cancelButton;
     @FXML private ProgressBar progressBar;
@@ -68,9 +78,39 @@ public class MainController {
     public void initialize() {
         // Toggle destination folder visibility based on mode
         scanModeRadio.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            destFolderBox.setVisible(!newVal);
-            destFolderBox.setManaged(!newVal);
-            startButton.setText(newVal ? "Start Scan" : "Start Sort");
+            if (newVal) {
+                destFolderBox.setVisible(false);
+                destFolderBox.setManaged(false);
+                onlineSearchCheckbox.setVisible(false);
+                onlineSearchCheckbox.setManaged(false);
+                openReportCheckbox.setVisible(true);
+                openReportCheckbox.setManaged(true);
+                startButton.setText("Start Scan");
+            }
+        });
+
+        sortModeRadio.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                destFolderBox.setVisible(true);
+                destFolderBox.setManaged(true);
+                onlineSearchCheckbox.setVisible(false);
+                onlineSearchCheckbox.setManaged(false);
+                openReportCheckbox.setVisible(true);
+                openReportCheckbox.setManaged(true);
+                startButton.setText("Start Sort");
+            }
+        });
+
+        coverArtModeRadio.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                destFolderBox.setVisible(false);
+                destFolderBox.setManaged(false);
+                onlineSearchCheckbox.setVisible(true);
+                onlineSearchCheckbox.setManaged(true);
+                openReportCheckbox.setVisible(false);
+                openReportCheckbox.setManaged(false);
+                startButton.setText("Extract Covers");
+            }
         });
 
         // Initialize theme selector
@@ -144,8 +184,9 @@ public class MainController {
         }
 
         boolean isScanOnly = scanModeRadio.isSelected();
+        boolean isCoverArtMode = coverArtModeRadio.isSelected();
 
-        if (!isScanOnly) {
+        if (!isScanOnly && !isCoverArtMode) {
             String dest = destFolderField.getText().trim();
             if (dest.isEmpty()) {
                 showError("Please select a destination folder for sort mode");
@@ -164,7 +205,9 @@ public class MainController {
         // Disable controls
         setControlsDisabled(true);
 
-        if (isScanOnly) {
+        if (isCoverArtMode) {
+            startCoverArtExtraction(sourcePath);
+        } else if (isScanOnly) {
             startScan(sourcePath);
         } else {
             startSort(sourcePath, Path.of(destFolderField.getText().trim()));
@@ -259,6 +302,219 @@ public class MainController {
         new Thread(task).start();
     }
 
+    private void startCoverArtExtraction(Path sourcePath) {
+        boolean useOnline = onlineSearchCheckbox.isSelected();
+
+        Task<CoverArtResult> task = new Task<>() {
+            @Override
+            protected CoverArtResult call() throws Exception {
+                CoverArtExtractor extractor = new CoverArtExtractor();
+                MusicBrainzFetcher fetcher = useOnline ? new MusicBrainzFetcher() : null;
+
+                List<CoverArtExtractor.ExtractedCover> onlineCovers = new ArrayList<>();
+                List<String> missingCovers = new ArrayList<>();
+                int fetchedOnline = 0;
+
+                Platform.runLater(() -> {
+                    progressLabel.setText("Finding directories...");
+                    log("Scanning for directories with audio files...");
+                });
+
+                List<Path> directories;
+                try (Stream<Path> paths = Files.walk(sourcePath)) {
+                    directories = paths
+                            .filter(Files::isDirectory)
+                            .filter(MainController.this::hasAudioFiles)
+                            .toList();
+                }
+
+                int totalDirs = directories.size();
+                Platform.runLater(() -> {
+                    log("Found " + totalDirs + " directories with audio files");
+                    progressLabel.setText("Phase 1: Extracting from tags...");
+                    statsDirsScanned.setText(String.valueOf(totalDirs));
+                });
+
+                List<Path> dirsWithoutCover = new ArrayList<>();
+                int processed = 0;
+
+                // Phase 1: Extract from embedded tags
+                for (Path dir : directories) {
+                    if (isCancelled()) break;
+
+                    processed++;
+                    String relativePath = sourcePath.relativize(dir).toString();
+                    if (relativePath.isEmpty()) relativePath = ".";
+
+                    final int p = processed;
+                    final String rp = relativePath;
+                    Platform.runLater(() -> {
+                        currentItemLabel.setText(rp);
+                        double progress = (double) p / totalDirs * (useOnline ? 0.5 : 1.0);
+                        progressBar.setProgress(progress);
+                        progressPercent.setText(String.format("%d/%d", p, totalDirs));
+                    });
+
+                    CoverArtExtractor.ExtractionResult result = extractor.extractCover(dir);
+                    switch (result) {
+                        case EXTRACTED:
+                            log("[OK] " + relativePath + " -> cover extracted from tags");
+                            break;
+                        case ALREADY_EXISTS:
+                            // Silent
+                            break;
+                        case NO_EMBEDDED_ART:
+                            dirsWithoutCover.add(dir);
+                            break;
+                        case NO_AUDIO_FILES:
+                        case ERROR:
+                            break;
+                    }
+                }
+
+                // Phase 2: Online fetch if enabled
+                if (useOnline && !dirsWithoutCover.isEmpty() && !isCancelled()) {
+                    Platform.runLater(() -> {
+                        progressLabel.setText("Phase 2: Fetching from MusicBrainz...");
+                        log("Directories without embedded cover: " + dirsWithoutCover.size());
+                        log("(Rate limited to 1 request/sec)");
+                    });
+
+                    int onlineProcessed = 0;
+                    for (Path dir : dirsWithoutCover) {
+                        if (isCancelled()) break;
+
+                        onlineProcessed++;
+                        String relativePath = sourcePath.relativize(dir).toString();
+                        if (relativePath.isEmpty()) relativePath = ".";
+
+                        final int op = onlineProcessed;
+                        final int dwc = dirsWithoutCover.size();
+                        final String rp = relativePath;
+                        Platform.runLater(() -> {
+                            currentItemLabel.setText(rp);
+                            double progress = 0.5 + (double) op / dwc * 0.5;
+                            progressBar.setProgress(progress);
+                            progressPercent.setText(String.format("Online %d/%d", op, dwc));
+                        });
+
+                        CoverArtExtractor.AlbumInfo info = extractor.getAlbumInfo(dir);
+                        if (!info.isValid()) {
+                            log("[SKIP] " + relativePath + " -> no artist/album tags");
+                            missingCovers.add(relativePath + " (no tags)");
+                            continue;
+                        }
+
+                        log("[....] " + relativePath + " -> searching \"" + info.artist + " - " + info.album + "\"...");
+
+                        Optional<Path> cover = fetcher.fetchCover(info.artist, info.album, dir);
+                        if (cover.isPresent()) {
+                            long size = Files.size(cover.get());
+                            log("[OK] " + relativePath + " -> downloaded from MusicBrainz (" + formatSize(size) + ")");
+                            fetchedOnline++;
+                            onlineCovers.add(new CoverArtExtractor.ExtractedCover(cover.get(), size, ".jpg"));
+                        } else {
+                            log("[MISS] " + relativePath + " -> not found on MusicBrainz");
+                            missingCovers.add(relativePath + " (" + info.artist + " - " + info.album + ")");
+                        }
+                    }
+                } else if (!dirsWithoutCover.isEmpty()) {
+                    for (Path dir : dirsWithoutCover) {
+                        String relativePath = sourcePath.relativize(dir).toString();
+                        if (relativePath.isEmpty()) relativePath = ".";
+                        log("[SKIP] " + relativePath + " -> no embedded cover");
+                        missingCovers.add(relativePath);
+                    }
+                }
+
+                return new CoverArtResult(extractor, fetchedOnline, onlineCovers, missingCovers, totalDirs);
+            }
+
+            @Override
+            protected void succeeded() {
+                CoverArtResult result = getValue();
+                int totalExtracted = result.extractor.getExtracted() + result.fetchedOnline;
+
+                log("");
+                log("=== Results ===");
+                log("Directories scanned:    " + result.totalDirs);
+                log("Already had cover:      " + result.extractor.getSkippedAlreadyExists());
+                log("Extracted from tags:    " + result.extractor.getExtracted());
+                if (useOnline) {
+                    log("Downloaded online:      " + result.fetchedOnline);
+                }
+                log("Still missing:          " + result.missingCovers.size());
+
+                if (totalExtracted > 0) {
+                    onOperationComplete("SUCCESS: Got " + totalExtracted + " cover(s)!");
+                } else if (!result.missingCovers.isEmpty() && !useOnline) {
+                    onOperationComplete("Done. Use 'Search MusicBrainz' option for missing covers.");
+                } else {
+                    onOperationComplete("Done. All directories already have cover images.");
+                }
+
+                // Update stats display
+                Platform.runLater(() -> {
+                    statsDirsOk.setText(String.valueOf(result.extractor.getSkippedAlreadyExists()));
+                    statsAudioFiles.setText(String.valueOf(result.extractor.getExtracted() + result.fetchedOnline));
+                    statsMissingTags.setText(String.valueOf(result.missingCovers.size()));
+                });
+            }
+
+            @Override
+            protected void failed() {
+                log("ERROR: " + getException().getMessage());
+                getException().printStackTrace();
+                onOperationComplete("Cover art extraction failed!", false);
+            }
+
+            @Override
+            protected void cancelled() {
+                onOperationComplete("Cover art extraction cancelled", false);
+            }
+        };
+
+        currentTask = task;
+        new Thread(task).start();
+    }
+
+    private boolean hasAudioFiles(Path dir) {
+        try (Stream<Path> files = Files.list(dir)) {
+            return files.anyMatch(f -> {
+                String name = f.getFileName().toString().toLowerCase();
+                return name.endsWith(".mp3") || name.endsWith(".flac") ||
+                       name.endsWith(".ogg") || name.endsWith(".m4a") ||
+                       name.endsWith(".wma") || name.endsWith(".wav");
+            });
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    private String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+    }
+
+    private static class CoverArtResult {
+        final CoverArtExtractor extractor;
+        final int fetchedOnline;
+        final List<CoverArtExtractor.ExtractedCover> onlineCovers;
+        final List<String> missingCovers;
+        final int totalDirs;
+
+        CoverArtResult(CoverArtExtractor extractor, int fetchedOnline,
+                       List<CoverArtExtractor.ExtractedCover> onlineCovers,
+                       List<String> missingCovers, int totalDirs) {
+            this.extractor = extractor;
+            this.fetchedOnline = fetchedOnline;
+            this.onlineCovers = onlineCovers;
+            this.missingCovers = missingCovers;
+            this.totalDirs = totalDirs;
+        }
+    }
+
     private void generateReports(RunTotals totals, Path sourcePath, Path destPath) {
         try {
             log("Generating reports...");
@@ -334,7 +590,9 @@ public class MainController {
         destFolderField.setDisable(disabled);
         scanModeRadio.setDisable(disabled);
         sortModeRadio.setDisable(disabled);
+        coverArtModeRadio.setDisable(disabled);
         openReportCheckbox.setDisable(disabled);
+        onlineSearchCheckbox.setDisable(disabled);
         startButton.setDisable(disabled);
         cancelButton.setDisable(!disabled);
     }
