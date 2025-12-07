@@ -27,6 +27,13 @@
             <artifactId>audiosorter-core</artifactId>
         </dependency>
 
+        <!-- Cover art module -->
+        <dependency>
+            <groupId>io.github.warnotte</groupId>
+            <artifactId>audiosorter-coverart</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- CLI parsing -->
         <dependency>
             <groupId>info.picocli</groupId>

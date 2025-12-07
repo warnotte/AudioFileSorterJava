@@ -3,6 +3,8 @@ package io.github.warnotte.audiosorter.cli;
 import io.github.warnotte.audiosorter.core.AudioSorterEngine;
 import io.github.warnotte.audiosorter.core.MusicScanner;
 import io.github.warnotte.audiosorter.core.SortConfiguration;
+import io.github.warnotte.audiosorter.coverart.CoverArtExtractor;
+import io.github.warnotte.audiosorter.coverart.MusicBrainzFetcher;
 import io.github.warnotte.audiosorter.listener.ConsoleProgressListener;
 import io.github.warnotte.audiosorter.listener.ConsoleScanListener;
 import io.github.warnotte.audiosorter.model.RunTotals;
@@ -19,7 +21,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 /**
  * CLI entry point for the Audio File Sorter using picocli.
@@ -31,7 +37,8 @@ import java.util.concurrent.Callable;
     description = "Music collection analyzer and organizer",
     subcommands = {
         Main.ScanCommand.class,
-        Main.SortCommand.class
+        Main.SortCommand.class,
+        Main.CoverArtCommand.class
     }
 )
 public class Main implements Callable<Integer> {
@@ -177,6 +184,186 @@ public class Main implements Callable<Integer> {
             }
 
             return 0;
+        }
+    }
+
+    /**
+     * CoverArt command - extract missing album cover art.
+     */
+    @Command(
+        name = "coverart",
+        mixinStandardHelpOptions = true,
+        description = "Extract missing album cover art from embedded tags or MusicBrainz"
+    )
+    static class CoverArtCommand implements Callable<Integer> {
+
+        @Parameters(
+            index = "0",
+            description = "Music directory to scan for missing covers"
+        )
+        private Path inputDir;
+
+        @Option(
+            names = {"-o", "--online"},
+            description = "Search MusicBrainz for covers not found in tags (rate limited 1 req/sec)"
+        )
+        private boolean online = false;
+
+        @Override
+        public Integer call() throws Exception {
+            System.out.println("=== COVER ART EXTRACTION ===");
+            System.out.println("Input: " + inputDir);
+            if (online) {
+                System.out.println("Online mode: ENABLED (will query MusicBrainz for missing covers)");
+            }
+            System.out.println();
+
+            CoverArtExtractor extractor = new CoverArtExtractor();
+            MusicBrainzFetcher fetcher = online ? new MusicBrainzFetcher() : null;
+
+            int totalDirs = 0;
+            int fetchedOnline = 0;
+            List<CoverArtExtractor.ExtractedCover> onlineCovers = new ArrayList<>();
+            List<String> missingCovers = new ArrayList<>();
+
+            try (Stream<Path> paths = Files.walk(inputDir)) {
+                var directories = paths
+                        .filter(Files::isDirectory)
+                        .filter(this::hasAudioFiles)
+                        .toList();
+
+                totalDirs = directories.size();
+                System.out.println("Found " + totalDirs + " directories with audio files");
+                System.out.println();
+                System.out.println("=== Phase 1: Extracting from embedded tags ===");
+                System.out.println();
+
+                List<Path> dirsWithoutCover = new ArrayList<>();
+
+                for (Path dir : directories) {
+                    CoverArtExtractor.ExtractionResult result = extractor.extractCover(dir);
+                    String relativePath = inputDir.relativize(dir).toString();
+                    if (relativePath.isEmpty()) relativePath = ".";
+
+                    switch (result) {
+                        case EXTRACTED:
+                            System.out.println("[OK]   " + relativePath + " -> cover extracted from tags");
+                            break;
+                        case ALREADY_EXISTS:
+                            // Silent
+                            break;
+                        case NO_EMBEDDED_ART:
+                            dirsWithoutCover.add(dir);
+                            break;
+                        case NO_AUDIO_FILES:
+                        case ERROR:
+                            break;
+                    }
+                }
+
+                // Phase 2: Online fetch if enabled
+                if (online && !dirsWithoutCover.isEmpty()) {
+                    System.out.println();
+                    System.out.println("=== Phase 2: Fetching from MusicBrainz ===");
+                    System.out.println("Directories without embedded cover: " + dirsWithoutCover.size());
+                    System.out.println("(Rate limited to 1 request/sec)");
+                    System.out.println();
+
+                    for (Path dir : dirsWithoutCover) {
+                        String relativePath = inputDir.relativize(dir).toString();
+                        if (relativePath.isEmpty()) relativePath = ".";
+
+                        CoverArtExtractor.AlbumInfo info = extractor.getAlbumInfo(dir);
+                        if (!info.isValid()) {
+                            System.out.println("[SKIP] " + relativePath + " -> no artist/album tags");
+                            missingCovers.add(relativePath + " (no tags)");
+                            continue;
+                        }
+
+                        System.out.print("[....] " + relativePath + " -> searching \"" + info.artist + " - " + info.album + "\"...");
+                        System.out.flush();
+
+                        Optional<Path> cover = fetcher.fetchCover(info.artist, info.album, dir);
+                        if (cover.isPresent()) {
+                            long size = Files.size(cover.get());
+                            System.out.println("\r[OK]   " + relativePath + " -> downloaded from MusicBrainz (" + formatSize(size) + ")");
+                            fetchedOnline++;
+                            onlineCovers.add(new CoverArtExtractor.ExtractedCover(cover.get(), size, ".jpg"));
+                        } else {
+                            System.out.println("\r[MISS] " + relativePath + " -> not found on MusicBrainz");
+                            missingCovers.add(relativePath + " (" + info.artist + " - " + info.album + ")");
+                        }
+                    }
+                } else if (!dirsWithoutCover.isEmpty()) {
+                    for (Path dir : dirsWithoutCover) {
+                        String relativePath = inputDir.relativize(dir).toString();
+                        if (relativePath.isEmpty()) relativePath = ".";
+                        System.out.println("[SKIP] " + relativePath + " -> no embedded cover");
+                        missingCovers.add(relativePath);
+                    }
+                }
+            }
+
+            // Print summary
+            System.out.println();
+            System.out.println("=== Results ===");
+            System.out.println("Directories scanned:    " + totalDirs);
+            System.out.println("Already had cover:      " + extractor.getSkippedAlreadyExists());
+            System.out.println("Extracted from tags:    " + extractor.getExtracted());
+            if (online) {
+                System.out.println("Downloaded online:      " + fetchedOnline);
+            }
+            System.out.println("Still missing:          " + missingCovers.size());
+
+            // List extracted covers
+            if (!extractor.getExtractedCovers().isEmpty()) {
+                System.out.println();
+                System.out.println("=== Covers Extracted from Tags ===");
+                for (CoverArtExtractor.ExtractedCover cover : extractor.getExtractedCovers()) {
+                    System.out.println("  " + cover.coverPath + " (" + cover.getSizeFormatted() + ")");
+                }
+            }
+
+            if (!onlineCovers.isEmpty()) {
+                System.out.println();
+                System.out.println("=== Covers Downloaded from MusicBrainz ===");
+                for (CoverArtExtractor.ExtractedCover cover : onlineCovers) {
+                    System.out.println("  " + cover.coverPath + " (" + cover.getSizeFormatted() + ")");
+                }
+            }
+
+            System.out.println();
+            int totalExtracted = extractor.getExtracted() + fetchedOnline;
+            if (totalExtracted > 0) {
+                System.out.println("SUCCESS: Got " + totalExtracted + " cover(s)!");
+            } else if (!missingCovers.isEmpty() && !online) {
+                System.out.println("TIP: Use --online flag to search MusicBrainz for missing covers");
+            } else if (!missingCovers.isEmpty()) {
+                System.out.println("Some covers could not be found. Try manual search or different tags.");
+            } else {
+                System.out.println("All directories already have cover images.");
+            }
+
+            return 0;
+        }
+
+        private boolean hasAudioFiles(Path dir) {
+            try (Stream<Path> files = Files.list(dir)) {
+                return files.anyMatch(f -> {
+                    String name = f.getFileName().toString().toLowerCase();
+                    return name.endsWith(".mp3") || name.endsWith(".flac") ||
+                           name.endsWith(".ogg") || name.endsWith(".m4a") ||
+                           name.endsWith(".wma") || name.endsWith(".wav");
+                });
+            } catch (IOException e) {
+                return false;
+            }
+        }
+
+        private String formatSize(long bytes) {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+            return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
         }
     }
 
