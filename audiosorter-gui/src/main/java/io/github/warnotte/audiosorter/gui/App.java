@@ -1,5 +1,6 @@
 package io.github.warnotte.audiosorter.gui;
 
+import atlantafx.base.theme.Dracula;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -13,6 +14,9 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Apply AtlantaFX Dracula theme
+        Application.setUserAgentStylesheet(new Dracula().getUserAgentStylesheet());
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/main.fxml"));
         Parent root = loader.load();
 
@@ -20,7 +24,6 @@ public class App extends Application {
         controller.setStage(primaryStage);
 
         Scene scene = new Scene(root, 900, 650);
-        scene.getStylesheets().add(getClass().getResource("/styles/dark-theme.css").toExternalForm());
 
         primaryStage.setTitle("AudioFilesSorter");
         primaryStage.setScene(scene);

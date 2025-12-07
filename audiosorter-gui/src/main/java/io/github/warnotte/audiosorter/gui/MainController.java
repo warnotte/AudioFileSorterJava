@@ -1,5 +1,6 @@
 package io.github.warnotte.audiosorter.gui;
 
+import atlantafx.base.theme.*;
 import io.github.warnotte.audiosorter.core.MusicScanner;
 import io.github.warnotte.audiosorter.core.MusicSorter;
 import io.github.warnotte.audiosorter.core.SortConfiguration;
@@ -10,6 +11,7 @@ import io.github.warnotte.audiosorter.model.FileReport;
 import io.github.warnotte.audiosorter.model.RunTotals;
 import io.github.warnotte.audiosorter.report.HtmlReportGenerator;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -23,6 +25,8 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Main controller for the AudioFilesSorter GUI.
@@ -49,8 +53,10 @@ public class MainController {
     @FXML private Label statsErrors;
     @FXML private Label statsDuplicates;
     @FXML private TextArea logArea;
+    @FXML private ComboBox<String> themeComboBox;
 
     private Stage stage;
+    private final Map<String, Theme> themes = new LinkedHashMap<>();
     private Task<?> currentTask;
     private MusicScanner currentScanner;
     private MusicSorter currentSorter;
@@ -66,6 +72,25 @@ public class MainController {
             destFolderBox.setManaged(!newVal);
             startButton.setText(newVal ? "Start Scan" : "Start Sort");
         });
+
+        // Initialize theme selector
+        themes.put("Dracula", new Dracula());
+        themes.put("Nord Dark", new NordDark());
+        themes.put("Nord Light", new NordLight());
+        themes.put("Primer Dark", new PrimerDark());
+        themes.put("Primer Light", new PrimerLight());
+        themes.put("Cupertino Dark", new CupertinoDark());
+        themes.put("Cupertino Light", new CupertinoLight());
+        themeComboBox.getItems().addAll(themes.keySet());
+        themeComboBox.setValue("Dracula");
+    }
+
+    @FXML
+    private void changeTheme() {
+        String selected = themeComboBox.getValue();
+        if (selected != null && themes.containsKey(selected)) {
+            Application.setUserAgentStylesheet(themes.get(selected).getUserAgentStylesheet());
+        }
     }
 
     public void setStage(Stage stage) {

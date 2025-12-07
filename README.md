@@ -17,7 +17,7 @@ A Java tool to analyze and organize audio files (MP3, FLAC, OGG, WAV) based on t
 audiosorter/
 ├── audiosorter-core/    # Core library (scanner, sorter, reports)
 ├── audiosorter-cli/     # Command-line interface
-└── audiosorter-gui/     # GUI application (Swing)
+└── audiosorter-gui/     # GUI application (JavaFX with AtlantaFX themes)
 ```
 
 ## Installation
@@ -159,6 +159,7 @@ MusicScanner ──→ RunTotals ──┬──→ MusicSorter (copy/move)
 - [jaudiotagger](https://bitbucket.org/ijabz/jaudiotagger) - Audio metadata reading
 - [picocli](https://picocli.info/) - CLI argument parsing
 - [Freemarker](https://freemarker.apache.org/) - HTML templating
+- [AtlantaFX](https://github.com/mkpaz/atlantafx) - Modern JavaFX themes
 - [Chart.js](https://www.chartjs.org/) - Interactive charts
 - [Simple-DataTables](https://github.com/fiduswriter/Simple-DataTables) - Sortable tables
 

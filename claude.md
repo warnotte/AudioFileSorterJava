@@ -166,7 +166,7 @@ Original monolithic implementation - kept for reference. Located in `audiosorter
 |--------|-------------|
 | **audiosorter-core** | jaudiotagger, freemarker, gson, log4j-core |
 | **audiosorter-cli** | audiosorter-core, picocli |
-| **audiosorter-gui** | audiosorter-core, javafx-controls, javafx-fxml |
+| **audiosorter-gui** | audiosorter-core, javafx-controls, javafx-fxml, atlantafx-base |
 
 ## HTML Report Features
 

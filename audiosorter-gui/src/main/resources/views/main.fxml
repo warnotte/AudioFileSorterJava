@@ -6,15 +6,14 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="io.github.warnotte.audiosorter.gui.MainController"
-            styleClass="root-pane">
+            fx:controller="io.github.warnotte.audiosorter.gui.MainController">
 
     <!-- Header -->
     <top>
-        <VBox styleClass="header" spacing="5">
+        <VBox spacing="5" style="-fx-background-color: -color-bg-subtle; -fx-border-color: -color-border-default; -fx-border-width: 0 0 1 0;">
             <padding><Insets top="15" right="20" bottom="15" left="20"/></padding>
-            <Label text="AudioFilesSorter" styleClass="title"/>
-            <Label text="Scan and organize your music collection" styleClass="subtitle"/>
+            <Label text="AudioFilesSorter" styleClass="title-1" style="-fx-text-fill: -color-accent-emphasis;"/>
+            <Label text="Scan and organize your music collection" styleClass="text-muted"/>
         </VBox>
     </top>
 
@@ -25,7 +24,7 @@
 
             <!-- Mode selection -->
             <HBox spacing="15" alignment="CENTER_LEFT">
-                <Label text="Mode:" styleClass="label-bold"/>
+                <Label text="Mode:" styleClass="text-bold"/>
                 <RadioButton fx:id="scanModeRadio" text="Scan only (generate reports)" selected="true">
                     <toggleGroup><ToggleGroup fx:id="modeGroup"/></toggleGroup>
                 </RadioButton>
@@ -36,19 +35,19 @@
 
             <!-- Source folder -->
             <VBox spacing="5">
-                <Label text="Source folder:" styleClass="label-bold"/>
+                <Label text="Source folder:" styleClass="text-bold"/>
                 <HBox spacing="10">
                     <TextField fx:id="sourceFolderField" promptText="Select music folder to scan..." HBox.hgrow="ALWAYS"/>
-                    <Button text="Browse..." onAction="#browseSourceFolder" styleClass="browse-button"/>
+                    <Button text="Browse..." onAction="#browseSourceFolder"/>
                 </HBox>
             </VBox>
 
             <!-- Destination folder (only for sort mode) -->
             <VBox fx:id="destFolderBox" spacing="5" managed="false" visible="false">
-                <Label text="Destination folder:" styleClass="label-bold"/>
+                <Label text="Destination folder:" styleClass="text-bold"/>
                 <HBox spacing="10">
                     <TextField fx:id="destFolderField" promptText="Select destination for sorted files..." HBox.hgrow="ALWAYS"/>
-                    <Button text="Browse..." onAction="#browseDestFolder" styleClass="browse-button"/>
+                    <Button text="Browse..." onAction="#browseDestFolder"/>
                 </HBox>
             </VBox>
 
@@ -59,46 +58,46 @@
 
             <!-- Action buttons -->
             <HBox spacing="15" alignment="CENTER">
-                <Button fx:id="startButton" text="Start Scan" onAction="#startOperation" styleClass="primary-button" prefWidth="150"/>
-                <Button fx:id="cancelButton" text="Cancel" onAction="#cancelOperation" styleClass="cancel-button" prefWidth="100" disable="true"/>
+                <Button fx:id="startButton" text="Start Scan" onAction="#startOperation" styleClass="accent" prefWidth="150"/>
+                <Button fx:id="cancelButton" text="Cancel" onAction="#cancelOperation" styleClass="danger" prefWidth="100" disable="true"/>
             </HBox>
 
             <!-- Progress section -->
-            <VBox fx:id="progressBox" spacing="10" styleClass="progress-section">
+            <VBox fx:id="progressBox" spacing="10" style="-fx-background-color: -color-bg-subtle; -fx-background-radius: 8; -fx-padding: 15;">
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <Label fx:id="progressLabel" text="Ready"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label fx:id="progressPercent" text=""/>
                 </HBox>
                 <ProgressBar fx:id="progressBar" progress="0" maxWidth="Infinity"/>
-                <Label fx:id="currentItemLabel" text="" styleClass="current-item"/>
+                <Label fx:id="currentItemLabel" text="" styleClass="text-muted, text-small"/>
             </VBox>
 
             <!-- Statistics -->
-            <TitledPane fx:id="statsPane" text="Statistics" expanded="false" styleClass="stats-pane">
+            <TitledPane fx:id="statsPane" text="Statistics" expanded="false">
                 <GridPane hgap="20" vgap="8">
                     <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
                     <Label text="Directories scanned:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                    <Label fx:id="statsDirsScanned" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="stat-value"/>
+                    <Label fx:id="statsDirsScanned" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="text-bold"/>
                     <Label text="Audio files found:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
-                    <Label fx:id="statsAudioFiles" text="0" GridPane.columnIndex="3" GridPane.rowIndex="0" styleClass="stat-value"/>
+                    <Label fx:id="statsAudioFiles" text="0" GridPane.columnIndex="3" GridPane.rowIndex="0" styleClass="text-bold"/>
 
                     <Label text="OK:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                    <Label fx:id="statsDirsOk" text="0" styleClass="stat-ok" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label fx:id="statsDirsOk" text="0" styleClass="text-bold, success" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
                     <Label text="Missing tags:" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-                    <Label fx:id="statsMissingTags" text="0" styleClass="stat-warning" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+                    <Label fx:id="statsMissingTags" text="0" styleClass="text-bold, warning" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
 
                     <Label text="Errors:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                    <Label fx:id="statsErrors" text="0" styleClass="stat-error" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Label fx:id="statsErrors" text="0" styleClass="text-bold, danger" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
                     <Label text="Duplicates:" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
-                    <Label fx:id="statsDuplicates" text="0" styleClass="stat-warning" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+                    <Label fx:id="statsDuplicates" text="0" styleClass="text-bold, warning" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
                 </GridPane>
             </TitledPane>
 
             <!-- Log area -->
             <VBox VBox.vgrow="ALWAYS" spacing="5">
-                <Label text="Log:" styleClass="label-bold"/>
-                <TextArea fx:id="logArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" styleClass="log-area"/>
+                <Label text="Log:" styleClass="text-bold"/>
+                <TextArea fx:id="logArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS"/>
             </VBox>
 
         </VBox>
@@ -106,11 +105,13 @@
 
     <!-- Footer -->
     <bottom>
-        <HBox styleClass="footer" alignment="CENTER_RIGHT" spacing="10">
+        <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: -color-bg-subtle; -fx-border-color: -color-border-default; -fx-border-width: 1 0 0 0;">
             <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
-            <Button text="Open Reports Folder" onAction="#openReportsFolder" styleClass="link-button"/>
+            <Button text="Open Reports Folder" onAction="#openReportsFolder" styleClass="flat"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="v0.2.0" styleClass="version"/>
+            <Label text="Theme:" styleClass="text-muted"/>
+            <ComboBox fx:id="themeComboBox" onAction="#changeTheme"/>
+            <Label text="v0.2.0" styleClass="text-muted, text-small"/>
         </HBox>
     </bottom>
 
