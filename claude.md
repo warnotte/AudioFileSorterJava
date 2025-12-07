@@ -19,11 +19,17 @@ audiosorter/
 ├── audiosorter-cli/             # CLI module
 │   ├── pom.xml
 │   └── src/main/java/.../cli/   # Picocli commands
-└── audiosorter-gui/             # GUI module (JavaFX + AtlantaFX)
+├── audiosorter-gui/             # GUI module (JavaFX + AtlantaFX)
+│   ├── pom.xml
+│   └── src/main/java/.../gui/   # App, Launcher, MainController
+│       └── resources/
+│           └── views/main.fxml  # FXML layout
+└── audiosorter-coverart/        # Cover art extraction module (experimental)
     ├── pom.xml
-    └── src/main/java/.../gui/   # App, Launcher, MainController
-        └── resources/
-            └── views/main.fxml  # FXML layout
+    └── src/main/java/.../coverart/
+        ├── CoverArtExtractor.java   # Extract from embedded tags
+        ├── CoverArtMain.java        # Standalone CLI
+        └── MusicBrainzFetcher.java  # Fetch from Cover Art Archive
 ```
 
 ## Build Commands
@@ -103,6 +109,22 @@ java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sor
 java -jar audiosorter-gui/target/AudioFilesSorter-GUI-0.2.0.jar
 ```
 
+## Cover Art Extractor Usage
+
+```bash
+# Extract covers from embedded tags only
+java -jar audiosorter-coverart/target/AudioSorter-CoverArt-0.2.0.jar D:\Music
+
+# Also search MusicBrainz for missing covers (rate limited 1 req/sec)
+java -jar audiosorter-coverart/target/AudioSorter-CoverArt-0.2.0.jar --online D:\Music
+```
+
+**Features:**
+- Phase 1: Extract embedded artwork from MP3/FLAC tags
+- Phase 2 (with `--online`): Search MusicBrainz and download from Cover Art Archive
+- Skips directories that already have cover images
+- Lists all extracted covers with file paths and sizes
+
 ## Project Overview
 
 AudioFilesSorter is a Java utility that sorts audio files (MP3, FLAC, OGG, WAV) based on embedded metadata (ID3 tags). It recursively scans directories, extracts artist/album/year tags using jaudiotagger, and reorganizes files into a hierarchical folder structure: `[ARTIST]/[YEAR] [ALBUM]/`.
@@ -172,6 +194,7 @@ Original monolithic implementation - kept for reference. Located in `audiosorter
 | **audiosorter-core** | jaudiotagger, freemarker, gson, log4j-core |
 | **audiosorter-cli** | audiosorter-core, picocli |
 | **audiosorter-gui** | audiosorter-core, javafx-controls, javafx-fxml, atlantafx-base |
+| **audiosorter-coverart** | audiosorter-core, jaudiotagger, gson (for JSON parsing) |
 
 ## HTML Report Features
 
@@ -285,8 +308,10 @@ Reports are generated in the `reports/` directory:
 - [x] **JavaFX GUI** - Dark-themed GUI with scan/sort modes, progress bar, cancel support, AtlantaFX themes
 - [x] **GUI Windows distribution** - jpackage app-image with embedded JRE (~45 MB ZIP)
 - [x] **GraalVM native-image GUI** - Native GUI executable with tracing agent (~80 MB, ~37 MB with UPX)
+- [x] **Cover Art Extractor** - Standalone module to extract covers from embedded tags + MusicBrainz API
 
 **Planned:**
+- [ ] **Integrate coverart into CLI/GUI** - Add cover extraction as command/option in main tools
 - [ ] **Normalize date format** - Some albums show `[2006]` while others show `[2016-10-06]` (YYYY-MM-DD). Should extract only the year from full dates for consistent display.
 - [ ] **Audio fingerprinting** - AcoustID/MusicBrainz integration for auto-tagging
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
