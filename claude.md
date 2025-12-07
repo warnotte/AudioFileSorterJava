@@ -100,6 +100,10 @@ java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar scan D:\Music -o ./m
 # Sort files (scan + copy to organized structure)
 java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sorted
 java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sorted --dry-run
+
+# Extract missing cover art
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar coverart D:\Music
+java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar coverart D:\Music --online
 ```
 
 ## GUI Usage
@@ -108,6 +112,14 @@ java -jar audiosorter-cli/target/AudioFilesSorter-0.2.0.jar sort D:\Music E:\Sor
 # Launch GUI
 java -jar audiosorter-gui/target/AudioFilesSorter-GUI-0.2.0.jar
 ```
+
+**GUI Modes:**
+- **Scan only** - Generate reports and catalog without copying files
+- **Sort** - Scan and copy files to organized structure (Artist/[Year] Album)
+- **Cover Art** - Extract missing album covers from embedded tags or MusicBrainz
+
+**Cover Art Mode Options:**
+- "Search MusicBrainz for missing covers" checkbox enables online search (rate-limited 1 req/sec)
 
 ## Cover Art Extractor Usage
 
@@ -192,8 +204,8 @@ Original monolithic implementation - kept for reference. Located in `audiosorter
 | Module | Dependencies |
 |--------|-------------|
 | **audiosorter-core** | jaudiotagger, freemarker, gson, log4j-core |
-| **audiosorter-cli** | audiosorter-core, picocli |
-| **audiosorter-gui** | audiosorter-core, javafx-controls, javafx-fxml, atlantafx-base |
+| **audiosorter-cli** | audiosorter-core, audiosorter-coverart, picocli |
+| **audiosorter-gui** | audiosorter-core, audiosorter-coverart, javafx-controls, javafx-fxml, atlantafx-base |
 | **audiosorter-coverart** | audiosorter-core, jaudiotagger, gson (for JSON parsing) |
 
 ## HTML Report Features
@@ -309,9 +321,9 @@ Reports are generated in the `reports/` directory:
 - [x] **GUI Windows distribution** - jpackage app-image with embedded JRE (~45 MB ZIP)
 - [x] **GraalVM native-image GUI** - Native GUI executable with tracing agent (~80 MB, ~37 MB with UPX)
 - [x] **Cover Art Extractor** - Standalone module to extract covers from embedded tags + MusicBrainz API
+- [x] **Integrate coverart into CLI/GUI** - Add cover extraction as command/option in main tools
 
 **Planned:**
-- [ ] **Integrate coverart into CLI/GUI** - Add cover extraction as command/option in main tools
 - [ ] **Normalize date format** - Some albums show `[2006]` while others show `[2016-10-06]` (YYYY-MM-DD). Should extract only the year from full dates for consistent display.
 - [ ] **Audio fingerprinting** - AcoustID/MusicBrainz integration for auto-tagging
 - [ ] **Playlist support** - Parse .m3u/.pls files and copy referenced tracks
