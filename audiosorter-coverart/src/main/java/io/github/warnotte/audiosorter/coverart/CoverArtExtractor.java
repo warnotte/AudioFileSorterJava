@@ -139,6 +139,62 @@ public class CoverArtExtractor {
     }
 
     /**
+     * Album metadata extracted from audio files.
+     */
+    public static class AlbumInfo {
+        public final String artist;
+        public final String album;
+
+        public AlbumInfo(String artist, String album) {
+            this.artist = artist;
+            this.album = album;
+        }
+
+        public boolean isValid() {
+            return artist != null && !artist.isBlank() &&
+                   album != null && !album.isBlank() &&
+                   !artist.equalsIgnoreCase("Unknown Artist") &&
+                   !album.equalsIgnoreCase("Unknown Album");
+        }
+    }
+
+    /**
+     * Extracts artist and album metadata from audio files in a directory.
+     */
+    public AlbumInfo getAlbumInfo(Path directory) {
+        File[] audioFiles = directory.toFile().listFiles((dir, name) -> {
+            String lower = name.toLowerCase();
+            for (String ext : AUDIO_EXTENSIONS) {
+                if (lower.endsWith(ext)) return true;
+            }
+            return false;
+        });
+
+        if (audioFiles == null || audioFiles.length == 0) {
+            return new AlbumInfo(null, null);
+        }
+
+        // Try to extract from first audio file with tags
+        for (File file : audioFiles) {
+            try {
+                AudioFile audioFile = AudioFileIO.read(file);
+                Tag tag = audioFile.getTag();
+                if (tag != null) {
+                    String artist = tag.getFirst(org.jaudiotagger.tag.FieldKey.ARTIST);
+                    String album = tag.getFirst(org.jaudiotagger.tag.FieldKey.ALBUM);
+                    if (artist != null && !artist.isBlank() && album != null && !album.isBlank()) {
+                        return new AlbumInfo(artist, album);
+                    }
+                }
+            } catch (Exception e) {
+                // Try next file
+            }
+        }
+
+        return new AlbumInfo(null, null);
+    }
+
+    /**
      * Checks if a cover image already exists in the directory.
      */
     private boolean hasCoverImage(Path directory) {
