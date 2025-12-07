@@ -19,12 +19,11 @@ audiosorter/
 ├── audiosorter-cli/             # CLI module
 │   ├── pom.xml
 │   └── src/main/java/.../cli/   # Picocli commands
-└── audiosorter-gui/             # GUI module (JavaFX)
+└── audiosorter-gui/             # GUI module (JavaFX + AtlantaFX)
     ├── pom.xml
-    └── src/main/java/.../gui/   # App, MainController
+    └── src/main/java/.../gui/   # App, Launcher, MainController
         └── resources/
-            ├── views/main.fxml  # FXML layout
-            └── styles/dark-theme.css
+            └── views/main.fxml  # FXML layout
 ```
 
 ## Build Commands
@@ -43,7 +42,8 @@ mvn package -pl audiosorter-cli -am
 mvn clean package -pl audiosorter-cli -am -Pdist
 
 # Build native executable with GraalVM (smallest, fastest startup)
-build-native.bat D:\Music\TestFolder
+build-native.bat D:\Music\TestFolder      # CLI
+build-native-gui.bat                       # GUI (requires user interaction during tracing)
 ```
 
 ### Distribution Output (with -Pdist profile)
@@ -66,15 +66,20 @@ The ZIP can be distributed to users who don't have Java installed.
 
 ```
 audiosorter-cli/target/
-└── AudioFilesSorter-native.exe    # Native executable (~60 MB, ~20 MB with UPX)
+└── AudioFilesSorter-native.exe        # CLI native (~60 MB, ~20 MB with UPX)
+
+audiosorter-gui/target/
+└── AudioFilesSorter-GUI-native.exe    # GUI native (~80 MB, ~37 MB with UPX)
 ```
 
 **Prerequisites:**
-- GraalVM JDK installed and in PATH
+- GraalVM JDK installed (GRAALVM_HOME or in PATH)
 - Visual Studio Build Tools (MSVC compiler)
 - Run from "x64 Native Tools Command Prompt"
 
 **Benefits:** Instant startup, no JRE required, single file distribution.
+
+**GUI Native Build:** The tracing agent requires user interaction - scan a folder, change themes, then close the app.
 
 ## CLI Usage
 
@@ -276,9 +281,10 @@ Reports are generated in the `reports/` directory:
 - [x] **Multi-module Maven** - Separate core, cli, gui modules
 - [x] **Windows distribution** - jpackage app-image with embedded JRE + ZIP
 - [x] **Minimal JRE with jlink** - Custom JRE with only required modules (~37 MB ZIP vs ~62 MB)
-- [x] **GraalVM native-image** - Native executable build script (~60 MB, ~20 MB with UPX)
-
-- [x] **JavaFX GUI** - Dark-themed GUI with scan/sort modes, progress bar, cancel support
+- [x] **GraalVM native-image CLI** - Native executable build script (~60 MB, ~20 MB with UPX)
+- [x] **JavaFX GUI** - Dark-themed GUI with scan/sort modes, progress bar, cancel support, AtlantaFX themes
+- [x] **GUI Windows distribution** - jpackage app-image with embedded JRE (~45 MB ZIP)
+- [x] **GraalVM native-image GUI** - Native GUI executable with tracing agent (~80 MB, ~37 MB with UPX)
 
 **Planned:**
 - [ ] **Normalize date format** - Some albums show `[2006]` while others show `[2016-10-06]` (YYYY-MM-DD). Should extract only the year from full dates for consistent display.

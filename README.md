@@ -57,12 +57,20 @@ The distribution uses jlink to create a minimal custom JRE with only the require
 Create a native executable with instant startup (no JRE required):
 
 ```bash
+# CLI native executable
 build-native.bat D:\Music\TestFolder
+
+# GUI native executable
+build-native-gui.bat
 ```
 
-This creates `audiosorter-cli/target/AudioFilesSorter-native.exe` (~60 MB, ~20 MB with UPX compression).
+This creates:
+- `audiosorter-cli/target/AudioFilesSorter-native.exe` (~60 MB, ~20 MB with UPX)
+- `audiosorter-gui/target/AudioFilesSorter-GUI-native.exe` (~80 MB, ~37 MB with UPX)
 
 **Prerequisites:** GraalVM JDK, Visual Studio Build Tools, run from "x64 Native Tools Command Prompt".
+
+**Note:** For GUI native build, interact with the application during the tracing phase (scan a folder, change themes) then close it.
 
 ## Usage
 
